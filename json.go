@@ -24,3 +24,14 @@ func Unmarshal(v interface{}, str interface{}) {
 		ExecError(json.Unmarshal(transHtmlJson(ReturnValueByTwo(json.Marshal(v)).([]byte)), &str))
 	}
 }
+
+func UnmarshalByOriginal(v interface{}, str interface{}) {
+	switch v.(type) {
+	case string:
+		ExecError(json.Unmarshal([]byte(v.(string)), &str))
+	case []byte:
+		ExecError(json.Unmarshal(v.([]byte), &str))
+	default:
+		ExecError(json.Unmarshal(ReturnValueByTwo(json.Marshal(v)).([]byte), &str))
+	}
+}
