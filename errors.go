@@ -1,9 +1,16 @@
-package errors
+package tools
 
 import (
 	"log"
 	"reflect"
 )
+
+func ReturnValue(v ...interface{}) interface{} {
+	if v[len(v)-1] != nil {
+		log.Println(v[len(v)-1])
+	}
+	return v[0]
+}
 
 func ReturnValueByTwo(v ...interface{}) interface{} {
 	if v[len(v)-1] != nil {
