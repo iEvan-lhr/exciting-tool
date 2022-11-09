@@ -73,8 +73,25 @@ func (s *String) Append(str any) int {
 	return -1
 }
 
-// IndexString 返回数据中含有字串的下标 没有返回-1
-func (s *String) IndexString(str any) int {
+// AppendAny  拼接字符串
+func (s *String) AppendAny(join any) int {
+	switch join.(type) {
+	case int, int8, int16, int32, int64:
+		return appendBytes(join.(int), &s.buf)
+	case float32, float64:
+		return ReturnValue(s.writeString(join.(string))).(int)
+	case bool:
+		if join.(bool) {
+			return ReturnValue(s.writeString("true")).(int)
+		} else {
+			return ReturnValue(s.writeString("false")).(int)
+		}
+	}
+	return -1
+}
+
+// Index 返回数据中含有字串的下标 没有返回-1
+func (s *String) Index(str any) int {
 	switch str.(type) {
 	case *String:
 		return bytes.Index(s.buf, str.(*String).buf)
