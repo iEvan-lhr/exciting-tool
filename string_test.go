@@ -2,28 +2,39 @@ package tools
 
 import (
 	"log"
+	"strconv"
 	"testing"
 	"time"
 )
 
 func TestName(t *testing.T) {
+	var sli []*String
+	for i := 0; i < 99999; i++ {
+		s := &String{}
+		s.AppendAny(i)
+		sli = append(sli, s)
+	}
 	start := time.Now()
+	for _, v := range sli {
+		_, err := v.Atoi()
+		if err != nil {
+			panic(err)
+		}
+	}
+	log.Println(time.Now().Sub(start))
+}
 
-	m := make(map[*String]int)
-
-	l, l1 := Strings("3212"), Strings("3212")
-	log.Println(&l, &l1)
-	m[l] = 99
-	//Unmarshal("98989898", &s1)
-	log.Println(time.Now().Sub(start), m[l1])
-	//var list []*String
-	//list = append(list, Strings("weq21"))
-	//start := time.Now()
-	//s1 := "1"
-	//for i := 0; i < 99999; i++ {
-	//	s1 = s1 + strconv.Itoa(i)
-	//}
-	//log.Println(time.Now().Sub(start), len(s1))
-	//s.AppendAny(19898989)
-	//log.Println(s)
+func TestAtoi(t *testing.T) {
+	var sli []string
+	for i := 0; i < 99999; i++ {
+		sli = append(sli, strconv.Itoa(i))
+	}
+	start := time.Now()
+	for _, v := range sli {
+		_, err := strconv.Atoi(v)
+		if err != nil {
+			panic(err)
+		}
+	}
+	log.Println(time.Now().Sub(start))
 }

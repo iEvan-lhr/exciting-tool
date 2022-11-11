@@ -21,6 +21,13 @@ func Strings(str string) *String {
 	return &s
 }
 
+func BytesString(b []byte) *String {
+	s := String{}
+	ReturnValueByTwo(s.Write(b))
+	s.runes = bytes.Runes(s.buf)
+	return &s
+}
+
 // ToString 字符串转型输出
 func (s *String) String() string {
 	return s.string()
@@ -301,6 +308,7 @@ func (s *String) RemoveIndexStr(lens int) {
 		return
 	}
 	s.buf = s.buf[lens:]
+	s.runes = bytes.Runes(s.buf)
 }
 
 // RemoveIndexRune 移除头部固定长度的字符（中文支持）
