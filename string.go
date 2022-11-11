@@ -31,6 +31,11 @@ func (s *String) Runes() []rune {
 	return s.runes
 }
 
+// Bytes 返回中文支持的字符
+func (s *String) Bytes() []byte {
+	return s.buf
+}
+
 // Check 检查是否相等
 func (s *String) Check(str any) bool {
 	switch str.(type) {
