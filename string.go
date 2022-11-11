@@ -76,10 +76,34 @@ func (s *String) Append(str any) int {
 // AppendAny  拼接字符串
 func (s *String) AppendAny(join any) int {
 	switch join.(type) {
-	case int, int8, int16, int32, int64:
-		return appendBytes(join.(int), &s.buf)
-	case float32, float64:
-		return ReturnValue(s.writeString(join.(string))).(int)
+	case int:
+		return appendInt(join.(int), &s.buf)
+	case int8:
+		return appendInt(int(join.(int8)), &s.buf)
+	case int16:
+		return appendInt(int(join.(int16)), &s.buf)
+	case int32:
+		return appendInt(int(join.(int32)), &s.buf)
+	case int64:
+		return appendInt(int(join.(int64)), &s.buf)
+	case uint:
+		return appendUint64(uint64(join.(uint)), &s.buf)
+	case uint8:
+		return appendUint64(uint64(join.(uint8)), &s.buf)
+	case uint16:
+		return appendUint64(uint64(join.(uint16)), &s.buf)
+	case uint32:
+		return appendUint64(uint64(join.(uint32)), &s.buf)
+	case uint64:
+		return appendUint64(join.(uint64), &s.buf)
+	case float32:
+		l1 := s.Len()
+		genericFtoa(&s.buf, float64(join.(float32)), 'f', 2, 32)
+		return s.Len() - l1
+	case float64:
+		l1 := s.Len()
+		genericFtoa(&s.buf, join.(float64), 'f', 2, 32)
+		return s.Len() - l1
 	case bool:
 		if join.(bool) {
 			return ReturnValue(s.writeString("true")).(int)
