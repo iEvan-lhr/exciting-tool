@@ -81,6 +81,8 @@ func (s *String) Append(str any) int {
 		return ReturnValue(s.writeString(str.(string))).(int)
 	case []byte:
 		return ReturnValue(s.Write(str.([]byte))).(int)
+	case byte:
+		return ReturnValue(s.WriteByte(str.(byte))).(int)
 	}
 	return -1
 }
