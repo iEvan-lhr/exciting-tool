@@ -72,25 +72,18 @@ func (s *String) Check(str any) bool {
 
 }
 
-// Append  拼接字符串
-func (s *String) Append(str any) int {
-	switch str.(type) {
-	case *String:
-		return ReturnValue(s.Write(str.(*String).buf)).(int)
-	case string:
-		return ReturnValue(s.writeString(str.(string))).(int)
-	case []byte:
-		return ReturnValue(s.Write(str.([]byte))).(int)
-	case byte:
-		ReturnValue(s.WriteByte(str.(byte)))
-		return 1
-	}
-	return -1
-}
-
-// AppendAny  拼接字符串
-func (s *String) AppendAny(join any) int {
+// appendAny  拼接字符串
+func (s *String) appendAny(join any) int {
 	switch join.(type) {
+	case *String:
+		return ReturnValue(s.Write(join.(*String).buf)).(int)
+	case string:
+		return ReturnValue(s.writeString(join.(string))).(int)
+	case []byte:
+		return ReturnValue(s.Write(join.([]byte))).(int)
+	case byte:
+		ReturnValue(s.WriteByte(join.(byte)))
+		return 1
 	case int:
 		return appendInt(join.(int), &s.buf)
 	case int8:
@@ -103,8 +96,6 @@ func (s *String) AppendAny(join any) int {
 		return appendInt(int(join.(int64)), &s.buf)
 	case uint:
 		return appendUint64(uint64(join.(uint)), &s.buf)
-	case uint8:
-		return appendUint64(uint64(join.(uint8)), &s.buf)
 	case uint16:
 		return appendUint64(uint64(join.(uint16)), &s.buf)
 	case uint32:
@@ -127,6 +118,17 @@ func (s *String) AppendAny(join any) int {
 		}
 	}
 	return -1
+}
+
+// Append  拼接字符串后返回String
+func (s *String) Append(join any) *String {
+	s.appendAny(join)
+	return s
+}
+
+// AppendLens  拼接字符串后返回String
+func (s *String) AppendLens(join any) int {
+	return s.appendAny(join)
 }
 
 // Index 返回数据中含有字串的下标 没有返回-1

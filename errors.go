@@ -47,6 +47,21 @@ func ExecError(err error) {
 	}
 }
 
+func Error(e interface{}) {
+	switch e.(type) {
+	case error:
+		if e.(error) != nil {
+			panic(e.(error))
+		}
+	case []error:
+		for _, err := range e.([]error) {
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+}
+
 func LogError(err error) {
 	if err != nil {
 		log.Println(err)
