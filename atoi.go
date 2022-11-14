@@ -38,13 +38,13 @@ func rangeError(fn, str *String) *NumError {
 
 func baseError(fn, str *String, base int) *NumError {
 	errorf := Strings("invalid base ")
-	errorf.AppendAny(base)
+	errorf.appendAny(base)
 	return &NumError{fn, str, errors.New(errorf.string())}
 }
 
 func bitSizeError(fn, str *String, bitSize int) *NumError {
 	errorf := Strings("invalid bit size ")
-	errorf.AppendAny(bitSize)
+	errorf.appendAny(bitSize)
 	return &NumError{fn, str, errors.New(errorf.string())}
 }
 

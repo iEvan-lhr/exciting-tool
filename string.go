@@ -3,6 +3,7 @@ package tools
 import (
 	"bytes"
 	"errors"
+	"reflect"
 	"unicode/utf8"
 	"unsafe"
 )
@@ -52,26 +53,41 @@ func (s *String) Bytes() []byte {
 func (s *String) Check(str any) bool {
 	switch str.(type) {
 	case *String:
-		for i, v := range str.(*String).buf {
-			if s.buf[i] != v {
-				return false
+		if inTF(len(s.buf), str.(*String).Len()) {
+			for i, v := range str.(*String).buf {
+				if s.buf[i] != v {
+					return false
+				}
 			}
+			return true
 		}
-		return true
 	case string:
-		for i, v := range []byte(str.(string)) {
-			if s.buf[i] != v {
-				return false
+		if inTF(len(s.buf), len(str.(string))) {
+			for i, v := range []byte(str.(string)) {
+				if s.buf[i] != v {
+					return false
+				}
 			}
+			return true
 		}
-		return true
 	case []byte:
-		for i, v := range str.([]byte) {
-			if s.buf[i] != v {
-				return false
+		if inTF(len(s.buf), len(str.([]byte))) {
+			for i, v := range str.([]byte) {
+				if s.buf[i] != v {
+					return false
+				}
 			}
+			return true
 		}
-		return true
+	case []rune:
+		if inTF(len(s.runes), len(str.([]rune))) {
+			for i, v := range str.([]rune) {
+				if s.runes[i] != v {
+					return false
+				}
+			}
+			return true
+		}
 	}
 	return false
 
@@ -79,6 +95,9 @@ func (s *String) Check(str any) bool {
 
 // appendAny  拼接字符串
 func (s *String) appendAny(join any) int {
+	defer func() {
+		s.runes = bytes.Runes(s.buf)
+	}()
 	switch join.(type) {
 	case *String:
 		return ReturnValue(s.Write(join.(*String).buf)).(int)
@@ -121,6 +140,10 @@ func (s *String) appendAny(join any) int {
 		} else {
 			return ReturnValue(s.writeString(FALSE)).(int)
 		}
+	default:
+		if reflect.ValueOf(join).Kind() == 22 {
+			return ReturnValue(s.writeString(reflect.ValueOf(join).MethodByName("String").Call(nil)[0].String())).(int)
+		}
 	}
 	return -1
 }
@@ -145,6 +168,8 @@ func (s *String) Index(str any) int {
 		return bytes.Index(s.buf, []byte(str.(string)))
 	case []byte:
 		return bytes.Index(s.buf, str.([]byte))
+	case rune:
+		return s.indexByRune(str.(rune))
 	}
 	return -1
 }
@@ -173,6 +198,7 @@ func (s *String) FirstUpper() {
 	if s.buf[0] > 90 {
 		s.buf[0] = s.buf[0] - 32
 	}
+	s.runes = bytes.Runes(s.buf)
 }
 
 // FirstLower 首字母小写
@@ -180,6 +206,7 @@ func (s *String) FirstLower() {
 	if s.buf[0] < 97 {
 		s.buf[0] = s.buf[0] + 32
 	}
+	s.runes = bytes.Runes(s.buf)
 }
 
 // FirstUpperBackString 首字母大写后返回string
@@ -284,6 +311,7 @@ func (s *String) RemoveLastStr(lens int) {
 		return
 	}
 	s.buf = s.buf[:s.Len()-lens]
+	s.runes = bytes.Runes(s.buf)
 }
 
 // RemoveLastStrByRune 从尾部移除固定长度的字符 并且支持中文字符的移除
@@ -353,4 +381,16 @@ func runesToBytes(rune []rune) []byte {
 		count += utf8.EncodeRune(bs[count:], r)
 	}
 	return bs
+}
+
+func (s *String) indexByRune(r rune) int {
+	if s.runes == nil || len(s.runes) == 0 {
+		s.runes = bytes.Runes(s.buf)
+	}
+	for i := range s.runes {
+		if s.runes[i] == r {
+			return i
+		}
+	}
+	return -1
 }

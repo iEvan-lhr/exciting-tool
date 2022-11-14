@@ -29,16 +29,18 @@ func PanicError(f ...func() error) {
 
 // ExecGoFunc       方法                参数
 func ExecGoFunc(exec interface{}, args ...interface{}) {
-	defer func() {
-		if e := recover(); e != nil {
-			panic(e)
+	go func() {
+		defer func() {
+			if e := recover(); e != nil {
+				panic(e)
+			}
+		}()
+		var values []reflect.Value
+		for _, arg := range args {
+			values = append(values, reflect.ValueOf(arg))
 		}
+		reflect.ValueOf(exec).Call(values)
 	}()
-	var values []reflect.Value
-	for _, arg := range args {
-		values = append(values, reflect.ValueOf(arg))
-	}
-	reflect.ValueOf(exec).Call(values)
 }
 
 func ExecError(err error) {
