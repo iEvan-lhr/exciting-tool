@@ -7,6 +7,11 @@ import (
 	"unsafe"
 )
 
+const (
+	TRUE  = "true"
+	FALSE = "false"
+)
+
 type String struct {
 	addr  *String
 	runes []rune
@@ -112,9 +117,9 @@ func (s *String) appendAny(join any) int {
 		return s.Len() - l1
 	case bool:
 		if join.(bool) {
-			return ReturnValue(s.writeString("true")).(int)
+			return ReturnValue(s.writeString(TRUE)).(int)
 		} else {
-			return ReturnValue(s.writeString("false")).(int)
+			return ReturnValue(s.writeString(FALSE)).(int)
 		}
 	}
 	return -1
