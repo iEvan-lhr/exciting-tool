@@ -22,14 +22,14 @@ type String struct {
 // Strings 根据字符串来构建一个String
 func Strings(str string) *String {
 	s := String{}
-	ReturnValueByTwo(s.writeString(str))
+	ReturnValue(s.writeString(str))
 	s.runes = bytes.Runes(s.buf)
 	return &s
 }
 
 func BytesString(b []byte) *String {
 	s := String{}
-	ReturnValueByTwo(s.Write(b))
+	ReturnValue(s.Write(b))
 	s.runes = bytes.Runes(s.buf)
 	return &s
 }
@@ -149,8 +149,48 @@ func (s *String) appendAny(join any) int {
 }
 
 // Append  拼接字符串后返回String
-func (s *String) Append(join any) *String {
-	s.appendAny(join)
+func (s *String) Append(join ...any) *String {
+	for i := range join {
+		s.appendAny(join[i])
+	}
+	return s
+}
+
+// AppendSpilt  拼接字符串后返回String
+func (s *String) AppendSpilt(join ...any) *String {
+	var split = &String{}
+	for i := range join {
+		if i == 0 {
+			split.Append(join[i])
+		} else if i == len(join)-1 {
+			s.appendAny(join[i])
+		} else {
+			s.appendAny(join[i])
+			s.Append(split)
+		}
+
+	}
+	return s
+}
+
+// AppendSpiltLR  拼接字符串后返回String
+func (s *String) AppendSpiltLR(join ...any) *String {
+	var split, l, r = &String{}, &String{}, &String{}
+	if len(join) < 3 {
+		panic("Add Lens<3")
+	}
+	split.appendAny(join[0])
+	l.appendAny(join[1])
+	r.appendAny(join[2])
+	for i := 3; i < len(join)-1; i++ {
+		s.appendAny(l)
+		s.appendAny(join[i])
+		s.appendAny(r)
+		s.Append(split)
+	}
+	s.appendAny(l)
+	s.appendAny(join[len(join)-1])
+	s.appendAny(r)
 	return s
 }
 
