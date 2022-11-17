@@ -27,6 +27,13 @@ func Strings(str string) *String {
 	return &s
 }
 
+// Make 根据指定类型来构建一个String
+func Make(value any) *String {
+	s := &String{}
+	s.appendAny(value)
+	return s
+}
+
 func BytesString(b []byte) *String {
 	s := String{}
 	ReturnValue(s.Write(b))
