@@ -95,9 +95,9 @@ func (s *String) Check(str any) bool {
 
 // appendAny  拼接字符串
 func (s *String) appendAny(join any) int {
-	defer func() {
-		s.runes = bytes.Runes(s.buf)
-	}()
+	//defer func() {
+	//	//s.runes = bytes.Runes(s.buf)
+	//}()
 	switch join.(type) {
 	case *String:
 		return ReturnValue(s.Write(join.(*String).buf)).(int)
@@ -146,6 +146,12 @@ func (s *String) appendAny(join any) int {
 		}
 	}
 	return -1
+}
+
+func (s *String) coverWrite(key any) *String {
+	s.buf = nil
+	s.appendAny(key)
+	return s
 }
 
 // Append  拼接字符串后返回String
@@ -433,4 +439,16 @@ func (s *String) indexByRune(r rune) int {
 		}
 	}
 	return -1
+}
+
+func checkBytes(s, str []byte) bool {
+	if inTF(len(s), len(str)) {
+		for i, v := range str {
+			if s[i] != v {
+				return false
+			}
+		}
+		return true
+	}
+	return false
 }
