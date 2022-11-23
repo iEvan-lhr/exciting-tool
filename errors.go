@@ -69,3 +69,16 @@ func LogError(err error) {
 		log.Println(err)
 	}
 }
+
+func DeferError(err error, exec interface{}, args ...interface{}) {
+	defer func() {
+		var values []reflect.Value
+		for _, arg := range args {
+			values = append(values, reflect.ValueOf(arg))
+		}
+		reflect.ValueOf(exec).Call(values)
+	}()
+	if err != nil {
+		panic(err)
+	}
+}
