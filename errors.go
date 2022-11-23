@@ -5,6 +5,12 @@ import (
 	"reflect"
 )
 
+type ParseError struct {
+	values []reflect.Value
+	err    error
+	isErr  bool
+}
+
 func ReturnValue(v ...interface{}) interface{} {
 	if v[len(v)-1] != nil {
 		log.Println(v[len(v)-1])
@@ -80,5 +86,50 @@ func DeferError(err error, exec interface{}, args ...interface{}) {
 	}()
 	if err != nil {
 		panic(err)
+	}
+}
+
+func ReturnError(err error, args ...interface{}) (vars *ParseError) {
+	vars = &ParseError{}
+	if err != nil {
+		if len(args) <= 2 {
+			panic(err)
+		}
+		vars.isErr = true
+		var values []reflect.Value
+		for _, arg := range args[3].([]interface{}) {
+			values = append(values, reflect.ValueOf(arg))
+		}
+		vars.values = append(vars.values, reflect.ValueOf(args[2]).Call(values)...)
+	} else {
+		vars.isErr = false
+		var values []reflect.Value
+		for _, arg := range args[1].([]interface{}) {
+			values = append(values, reflect.ValueOf(arg))
+		}
+		vars.values = append(vars.values, reflect.ValueOf(args[0]).Call(values)...)
+	}
+	return
+}
+
+func (p *ParseError) Unmarshal(args ...interface{}) {
+	switch args[0].(type) {
+	case []interface{}:
+		if p.isErr {
+			if len(args[1].([]interface{})) == 0 {
+				panic("ParseErrorFail:error message:" + p.err.Error())
+			}
+			for i, v := range args[1].([]interface{}) {
+				reflect.ValueOf(v).Elem().Set(p.values[i])
+			}
+		} else {
+			for i, v := range args[0].([]interface{}) {
+				reflect.ValueOf(v).Elem().Set(p.values[i])
+			}
+		}
+	default:
+		for i, v := range args {
+			reflect.ValueOf(v).Elem().Set(p.values[i])
+		}
 	}
 }
