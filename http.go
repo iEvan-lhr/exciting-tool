@@ -13,8 +13,9 @@ func Do(url string, args ...interface{}) *String {
 		return post(url, args[0].(string))
 	}
 }
-func UnMarshal(r *http.Request, v interface{}) {
+func UnMarshal(r *http.Request, v interface{}) interface{} {
 	Unmarshal(ReturnValueByTwo(io.ReadAll(r.Body)), v)
+	return v
 }
 
 func get(url string) *String {
