@@ -89,26 +89,32 @@ func DeferError(err error, exec interface{}, args ...interface{}) {
 	}
 }
 
-func ReturnError(err error, args ...interface{}) (vars *ParseError) {
-	vars = &ParseError{}
+func ReturnError(err error, succ func(...interface{}) *ParseError, fail func(...interface{}) *ParseError, args ...interface{}) (vars *ParseError) {
 	if err != nil {
-		if len(args) <= 2 {
-			panic(err)
-		}
-		vars.isErr = true
-		var values []reflect.Value
-		for _, arg := range args[3].([]interface{}) {
-			values = append(values, reflect.ValueOf(arg))
-		}
-		vars.values = append(vars.values, reflect.ValueOf(args[2]).Call(values)...)
-	} else {
-		vars.isErr = false
-		var values []reflect.Value
-		for _, arg := range args[1].([]interface{}) {
-			values = append(values, reflect.ValueOf(arg))
-		}
-		vars.values = append(vars.values, reflect.ValueOf(args[0]).Call(values)...)
+		return fail(args...)
 	}
+	return succ(args...)
+}
+
+func F(args ...interface{}) (vars *ParseError) {
+	vars = &ParseError{}
+	vars.isErr = true
+	var values []reflect.Value
+	for _, arg := range args[1:] {
+		values = append(values, reflect.ValueOf(arg))
+	}
+	vars.values = append(vars.values, reflect.ValueOf(args[0]).Call(values)...)
+	return
+}
+
+func S(args ...interface{}) (vars *ParseError) {
+	vars = &ParseError{}
+	vars.isErr = false
+	var values []reflect.Value
+	for _, arg := range args[1:] {
+		values = append(values, reflect.ValueOf(arg))
+	}
+	vars.values = append(vars.values, reflect.ValueOf(args[0]).Call(values)...)
 	return
 }
 
