@@ -14,7 +14,7 @@ func Do(url string, args ...interface{}) *String {
 	}
 }
 func UnMarshal(r *http.Request, v interface{}) interface{} {
-	Unmarshal(ReturnValueByTwo(io.ReadAll(r.Body)), v)
+	Unmarshal(ReturnValueByTwo(io.ReadAll(r.Body)), &v)
 	return v
 }
 
