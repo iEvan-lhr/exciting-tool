@@ -2,8 +2,8 @@ package tools
 
 const sli = '_'
 
-func (s *String) Save(model any) *String {
-	s.appendAny("insert into ")
+func Save(model any) *String {
+	s := &String{}
 	s.marshalStruct(model)
 	return s
 }

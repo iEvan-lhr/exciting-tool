@@ -23,16 +23,18 @@ func (s *String) strTime(t time.Time) {
 }
 
 func (s *String) marshalStruct(model any) {
-	var values reflect.Value
-	var types reflect.Type
-	switch reflect.ValueOf(model).Kind() {
+	values, typ := returnValAndTyp(model)
+	switch values.Kind() {
 	case reflect.Struct:
-		values = reflect.ValueOf(model)
-		types = reflect.TypeOf(model)
-	case reflect.Pointer:
-		values = reflect.ValueOf(model).Elem()
-		types = reflect.TypeOf(model).Elem()
+		s.generateModel(values, typ)
+	case reflect.Slice:
+		s.generateModels(values)
 	}
+
+}
+
+func (s *String) generateModel(values reflect.Value, types reflect.Type) {
+	s.appendAny("insert into ")
 	s.cutHumpMessage(values.String())
 	tags := Make(" (")
 	vars := Make(" values(")
@@ -47,28 +49,73 @@ func (s *String) marshalStruct(model any) {
 			vars.Append("'", values.Field(j).Interface(), "',")
 		}
 	}
-	tags.RemoveLastStr(1)
-	vars.RemoveLastStr(1)
-	tags.appendAny(")")
-	vars.appendAny(")")
+	tags.ReplaceLastStr(1, ")")
+	vars.ReplaceLastStr(1, ")")
 	s.Append(tags, vars)
+}
+
+func (s *String) generateModels(values reflect.Value) {
+	if !(values.Len() > 0) {
+		return
+	}
+	head, lens := generateHead(values.Index(0).Interface())
+	s.appendAny(head)
+	for i := 0; i < values.Len(); i++ {
+		v, t := returnValAndTyp(values.Index(i).Interface())
+		if i != 0 && i%200 == 0 {
+			s.ReplaceLastStr(1, ";\n")
+			s.appendAny(head)
+		}
+		vars := Make("(")
+		for j := 0; j < lens; j++ {
+			switch t.Field(j).Tag.Get("marshal") {
+			case "off":
+			case "auto_insert":
+				vars.appendAny("NULL,")
+			default:
+				vars.Append("'", v.Field(j).Interface(), "',")
+			}
+		}
+		vars.ReplaceLastStr(1, "),")
+		s.appendAny(vars)
+	}
+	s.ReplaceLastStr(1, ";")
+}
+
+func generateHead(model any) (*String, int) {
+	values, typ := returnValAndTyp(model)
+	s := Make("insert into ")
+	s.cutHumpMessage(values.String())
+	tags := Make(" (")
+	for j := 0; j < typ.NumField(); j++ {
+		switch typ.Field(j).Tag.Get("marshal") {
+		case "off":
+		case "auto_insert":
+			tags.Append("`", humpName(typ.Field(j).Name), "`,")
+		default:
+			tags.Append("`", humpName(typ.Field(j).Name), "`,")
+		}
+	}
+	tags.ReplaceLastStr(1, ")")
+	s.Append(tags, " values")
+	return s, typ.NumField()
 }
 
 func (s *String) queryStruct(model any) {
 	var values reflect.Value
-	var types reflect.Type
+	var typ reflect.Type
 	switch reflect.ValueOf(model).Kind() {
 	case reflect.Struct:
 		values = reflect.ValueOf(model)
-		types = reflect.TypeOf(model)
+		typ = reflect.TypeOf(model)
 	case reflect.Pointer:
 		values = reflect.ValueOf(model).Elem()
-		types = reflect.TypeOf(model).Elem()
+		typ = reflect.TypeOf(model).Elem()
 	}
 	s.appendAny(Select)
 	s.cutHumpMessage(values.String())
 	var where byte
-	for j := 0; j < types.NumField(); j++ {
+	for j := 0; j < typ.NumField(); j++ {
 		if !values.Field(j).IsZero() {
 			if where == 0 {
 				s.appendAny(" where ")
@@ -79,7 +126,7 @@ func (s *String) queryStruct(model any) {
 			switch values.Field(j).Kind() {
 			case reflect.Slice:
 			default:
-				s.Append(humpName(types.Field(j).Name), "=", "'", values.Field(j).Interface(), "'")
+				s.Append(humpName(typ.Field(j).Name), "=", "'", values.Field(j).Interface(), "'")
 			}
 		}
 	}
@@ -164,16 +211,7 @@ func runesToBytes(rune []rune) []byte {
 	return bs
 }
 func (s *String) Marshal(model any) {
-	var values reflect.Value
-	var types reflect.Type
-	switch reflect.ValueOf(model).Kind() {
-	case reflect.Struct:
-		values = reflect.ValueOf(model)
-		types = reflect.TypeOf(model)
-	case reflect.Pointer:
-		values = reflect.ValueOf(model).Elem()
-		types = reflect.TypeOf(model).Elem()
-	}
+	values, types := returnValAndTyp(model)
 	s.cutStructMessage(values.String())
 	for j := 0; j < types.NumField(); j++ {
 		if types.Field(j).Tag.Get("marshal") != "off" {
@@ -182,6 +220,19 @@ func (s *String) Marshal(model any) {
 	}
 	s.appendAny(EndMessage)
 }
+
+func returnValAndTyp(model any) (values reflect.Value, types reflect.Type) {
+	switch reflect.ValueOf(model).Kind() {
+	case reflect.Struct, reflect.Slice:
+		values = reflect.ValueOf(model)
+		types = reflect.TypeOf(model)
+	case reflect.Pointer:
+		values = reflect.ValueOf(model).Elem()
+		types = reflect.TypeOf(model).Elem()
+	}
+	return
+}
+
 func MarshalMap(model any) map[string]string {
 	modelMap := make(map[string]string)
 	var values reflect.Value

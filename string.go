@@ -339,6 +339,13 @@ func (s *String) RemoveLastStr(lens int) {
 	s.runes = bytes.Runes(s.buf)
 }
 
+// ReplaceLastStr 从尾部移除固定长度的字符
+func (s *String) ReplaceLastStr(lens int, str any) {
+	s.buf = s.buf[:s.Len()-lens]
+	s.appendAny(str)
+	s.runes = bytes.Runes(s.buf)
+}
+
 // RemoveLastStrByRune 从尾部移除固定长度的字符 并且支持中文字符的移除
 func (s *String) RemoveLastStrByRune(lens int) {
 	runes := bytes.Runes(s.buf)

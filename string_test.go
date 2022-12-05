@@ -2,6 +2,7 @@ package tools
 
 import (
 	"log"
+	"os"
 	"testing"
 	"time"
 )
@@ -13,11 +14,19 @@ func TestName(t *testing.T) {
 	////	log.Println(i, i2)
 	////}
 	////log.Println(reflect.ValueOf(&User{UserName: "foo", Password: "bar", Order: 3.23}).MethodByName("String").IsValid())
-	s := Make([]any{&User{Username: "foo", Password: "bar"}, &User{Username: "boo", Password: "bar"}, &User{Username: "foo", Password: "coo"}})
 	////s.Marshal(&User{UserName: "foo", Password: "bar", Order: 3.23})
 	////log.Println(s)
 	//log.Println(Make("").Save(User{Id: 23132, Username: "foo", Password: "bar", Identity: "123sakdjwe", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"}))
-	log.Println(s)
+	//s := Make("99999")
+	//s.ReplaceLastStr(1, "888")
+	var users []User
+	user := User{Id: 23132, Username: "foo", Password: "bar", Identity: "123sakdjwe", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"}
+	for i := 0; i < 560; i++ {
+		users = append(users, user)
+	}
+	save := Save(users)
+	err := os.WriteFile("testing.txt", save.buf, 0666)
+	Error(err)
 }
 
 type User struct {
