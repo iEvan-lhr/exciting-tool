@@ -15,7 +15,7 @@ func Do(url string, args ...interface{}) *String {
 	}
 }
 func UnMarshal(r *http.Request, v interface{}) interface{} {
-	Unmarshal([]byte("{\"app_name\":\"追云鹿\",\"password\":\"ZXC000\"}"), reflect.ValueOf(v).Interface())
+	Unmarshal(ReturnValueByTwo(io.ReadAll(r.Body)), reflect.ValueOf(v).Interface())
 	return v
 }
 
