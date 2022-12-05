@@ -29,9 +29,9 @@ func Strings(str string) *String {
 }
 
 // Make 根据指定类型来构建一个String
-func Make(value any) *String {
+func Make(value ...any) *String {
 	s := &String{}
-	s.appendAny(value)
+	s.Append(value...)
 	return s
 }
 
@@ -103,9 +103,6 @@ func (s *String) Check(str any) bool {
 
 // appendAny  拼接字符串
 func (s *String) appendAny(join any) int {
-	//defer func() {
-	//	//s.runes = bytes.Runes(s.buf)
-	//}()
 	switch join.(type) {
 	case *String:
 		return ReturnValue(s.Write(join.(*String).buf)).(int)
@@ -151,8 +148,13 @@ func (s *String) appendAny(join any) int {
 	case time.Time:
 		s.strTime(join.(time.Time))
 	default:
-		if reflect.ValueOf(join).Kind() == 22 {
-			return ReturnValue(s.writeString(reflect.ValueOf(join).MethodByName("String").Call(nil)[0].String())).(int)
+		value := reflect.ValueOf(join)
+		if value.Kind() == reflect.Pointer || value.Kind() == reflect.Struct {
+			if value.MethodByName("String").IsValid() {
+				return ReturnValue(s.writeString(value.MethodByName("String").Call(nil)[0].String())).(int)
+			} else {
+				s.Marshal(join)
+			}
 		}
 	}
 	return -1

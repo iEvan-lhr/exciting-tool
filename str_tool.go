@@ -7,6 +7,7 @@ import (
 )
 
 const timeLayout = "2006-01-02 15:04:05"
+const EndMessage = "----------END----------"
 
 func inTF(i, j int) bool {
 	return i == j
@@ -37,7 +38,7 @@ func (s *String) cutStructMessage(sm string) {
 	sms := Make(sm)
 	split := sms.Split(".")
 	sms.coverWrite(split[len(split)-1])
-	s.Append(sms.Split(" ")[0], ":", "\n")
+	s.Append("\n", "----------", sms.Split(" ")[0], "----------", "\n")
 }
 
 // AppendSpilt  拼接字符串后返回String
@@ -164,22 +165,39 @@ func (s *String) appendKind(join any) int {
 }
 
 func (s *String) Marshal(model any) {
-	if reflect.ValueOf(model).Kind() == 25 {
-		values := reflect.ValueOf(model)
-		types := reflect.TypeOf(model)
-		s.cutStructMessage(values.String())
-		for j := 0; j < types.NumField(); j++ {
+	var values reflect.Value
+	var types reflect.Type
+	switch reflect.ValueOf(model).Kind() {
+	case reflect.Struct:
+		values = reflect.ValueOf(model)
+		types = reflect.TypeOf(model)
+	case reflect.Pointer:
+		values = reflect.ValueOf(model).Elem()
+		types = reflect.TypeOf(model).Elem()
+	}
+	s.cutStructMessage(values.String())
+	for j := 0; j < types.NumField(); j++ {
+		if types.Field(j).Tag.Get("marshal") != "off" {
 			s.Append(types.Field(j).Name, ":", values.Field(j).Interface(), "\n")
 		}
 	}
+	s.appendAny(EndMessage)
 }
 func MarshalMap(model any) map[string]string {
 	modelMap := make(map[string]string)
-	if reflect.ValueOf(model).Kind() == 25 {
-		values := reflect.ValueOf(model)
-		types := reflect.TypeOf(model)
-		modelMap["StructName"] = cutStructMessage(values.String())
-		for j := 0; j < types.NumField(); j++ {
+	var values reflect.Value
+	var types reflect.Type
+	switch reflect.ValueOf(model).Kind() {
+	case reflect.Struct:
+		values = reflect.ValueOf(model)
+		types = reflect.TypeOf(model)
+	case reflect.Pointer:
+		values = reflect.ValueOf(model).Elem()
+		types = reflect.TypeOf(model).Elem()
+	}
+	modelMap["StructName"] = cutStructMessage(values.String())
+	for j := 0; j < types.NumField(); j++ {
+		if types.Field(j).Tag.Get("marshal") != "off" {
 			modelMap[types.Field(j).Name] = Make(values.Field(j).Interface()).string()
 		}
 	}
