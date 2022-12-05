@@ -8,6 +8,12 @@ func (s *String) Save(model any) *String {
 	return s
 }
 
+func Query(model any) string {
+	s := String{}
+	s.queryStruct(model)
+	return s.string()
+}
+
 func humpName(buf string) (ans []byte) {
 	if len(buf) > 0 {
 		for i := range buf {

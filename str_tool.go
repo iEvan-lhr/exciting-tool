@@ -8,6 +8,7 @@ import (
 
 const timeLayout = "2006-01-02 15:04:05"
 const EndMessage = "----------END----------"
+const Select = "select * from "
 
 func inTF(i, j int) bool {
 	return i == j
@@ -51,6 +52,37 @@ func (s *String) marshalStruct(model any) {
 	tags.appendAny(")")
 	vars.appendAny(")")
 	s.Append(tags, vars)
+}
+
+func (s *String) queryStruct(model any) {
+	var values reflect.Value
+	var types reflect.Type
+	switch reflect.ValueOf(model).Kind() {
+	case reflect.Struct:
+		values = reflect.ValueOf(model)
+		types = reflect.TypeOf(model)
+	case reflect.Pointer:
+		values = reflect.ValueOf(model).Elem()
+		types = reflect.TypeOf(model).Elem()
+	}
+	s.appendAny(Select)
+	s.cutHumpMessage(values.String())
+	var where byte
+	for j := 0; j < types.NumField(); j++ {
+		if !values.Field(j).IsZero() {
+			if where == 0 {
+				s.appendAny(" where ")
+				where++
+			} else {
+				s.appendAny(" and ")
+			}
+			switch values.Field(j).Kind() {
+			case reflect.Slice:
+			default:
+				s.Append(humpName(types.Field(j).Name), "=", "'", values.Field(j).Interface(), "'")
+			}
+		}
+	}
 }
 
 func (s *String) cutStructMessage(sm string) {
