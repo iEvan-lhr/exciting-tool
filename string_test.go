@@ -25,7 +25,11 @@ func TestName(t *testing.T) {
 		users = append(users, user)
 	}
 	save := Save(users)
-	err := os.WriteFile("testing.txt", save.buf, 0666)
+	var buf []byte
+	for i := range save {
+		buf = append(buf, save[i].buf...)
+	}
+	err := os.WriteFile("testing.txt", buf, 0666)
 	Error(err)
 }
 

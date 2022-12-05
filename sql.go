@@ -2,10 +2,9 @@ package tools
 
 const sli = '_'
 
-func Save(model any) *String {
-	s := &String{}
-	s.marshalStruct(model)
-	return s
+func Save(model any) (result []*String) {
+	result = marshalStruct(model)
+	return
 }
 
 func Query(model any) string {

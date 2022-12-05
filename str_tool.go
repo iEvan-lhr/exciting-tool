@@ -22,19 +22,19 @@ func (s *String) strTime(t time.Time) {
 	s.appendAny(t.AppendFormat(b, timeLayout))
 }
 
-func (s *String) marshalStruct(model any) {
+func marshalStruct(model any) (result []*String) {
 	values, typ := returnValAndTyp(model)
 	switch values.Kind() {
 	case reflect.Struct:
-		s.generateModel(values, typ)
+		return generateModel(values, typ)
 	case reflect.Slice:
-		s.generateModels(values)
+		return generateModels(values)
 	}
-
+	return nil
 }
 
-func (s *String) generateModel(values reflect.Value, types reflect.Type) {
-	s.appendAny("insert into ")
+func generateModel(values reflect.Value, types reflect.Type) (result []*String) {
+	s := Make("insert into ")
 	s.cutHumpMessage(values.String())
 	tags := Make(" (")
 	vars := Make(" values(")
@@ -52,19 +52,22 @@ func (s *String) generateModel(values reflect.Value, types reflect.Type) {
 	tags.ReplaceLastStr(1, ")")
 	vars.ReplaceLastStr(1, ")")
 	s.Append(tags, vars)
+	result = append(result, s)
+	return
 }
 
-func (s *String) generateModels(values reflect.Value) {
+func generateModels(values reflect.Value) (result []*String) {
 	if !(values.Len() > 0) {
 		return
 	}
 	head, lens := generateHead(values.Index(0).Interface())
-	s.appendAny(head)
+	s := Make(head)
 	for i := 0; i < values.Len(); i++ {
 		v, t := returnValAndTyp(values.Index(i).Interface())
 		if i != 0 && i%200 == 0 {
 			s.ReplaceLastStr(1, ";\n")
-			s.appendAny(head)
+			result = append(result, s)
+			s = Make(head)
 		}
 		vars := Make("(")
 		for j := 0; j < lens; j++ {
@@ -80,6 +83,8 @@ func (s *String) generateModels(values reflect.Value) {
 		s.appendAny(vars)
 	}
 	s.ReplaceLastStr(1, ";")
+	result = append(result, s)
+	return
 }
 
 func generateHead(model any) (*String, int) {
