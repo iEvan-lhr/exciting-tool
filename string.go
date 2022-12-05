@@ -149,11 +149,16 @@ func (s *String) appendAny(join any) int {
 		s.strTime(join.(time.Time))
 	default:
 		value := reflect.ValueOf(join)
-		if value.Kind() == reflect.Pointer || value.Kind() == reflect.Struct {
+		switch value.Kind() {
+		case reflect.Struct, reflect.Pointer:
 			if value.MethodByName("String").IsValid() {
 				return ReturnValue(s.writeString(value.MethodByName("String").Call(nil)[0].String())).(int)
 			} else {
 				s.Marshal(join)
+			}
+		case reflect.Slice:
+			for i := 0; i < value.Len(); i++ {
+				s.appendAny(value.Index(i).Interface())
 			}
 		}
 	}

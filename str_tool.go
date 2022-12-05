@@ -21,17 +21,36 @@ func (s *String) strTime(t time.Time) {
 	s.appendAny(t.AppendFormat(b, timeLayout))
 }
 
-func (s *String) marshalStruct(structs ...any) {
-	for i := range structs {
-		if reflect.ValueOf(structs[i]).Kind() == 25 {
-			values := reflect.ValueOf(structs[i])
-			types := reflect.TypeOf(structs[i])
-			s.cutStructMessage(values.String())
-			for j := 0; j < types.NumField(); j++ {
-				s.Append(types.Field(j).Name, ":", values.Field(j).Interface(), "\n")
-			}
+func (s *String) marshalStruct(model any) {
+	var values reflect.Value
+	var types reflect.Type
+	switch reflect.ValueOf(model).Kind() {
+	case reflect.Struct:
+		values = reflect.ValueOf(model)
+		types = reflect.TypeOf(model)
+	case reflect.Pointer:
+		values = reflect.ValueOf(model).Elem()
+		types = reflect.TypeOf(model).Elem()
+	}
+	s.cutHumpMessage(values.String())
+	tags := Make(" (")
+	vars := Make(" values(")
+	for j := 0; j < types.NumField(); j++ {
+		switch types.Field(j).Tag.Get("marshal") {
+		case "off":
+		case "auto_insert":
+			tags.Append("`", humpName(types.Field(j).Name), "`,")
+			vars.appendAny("NULL,")
+		default:
+			tags.Append("`", humpName(types.Field(j).Name), "`,")
+			vars.Append("'", values.Field(j).Interface(), "',")
 		}
 	}
+	tags.RemoveLastStr(1)
+	vars.RemoveLastStr(1)
+	tags.appendAny(")")
+	vars.appendAny(")")
+	s.Append(tags, vars)
 }
 
 func (s *String) cutStructMessage(sm string) {
@@ -39,6 +58,14 @@ func (s *String) cutStructMessage(sm string) {
 	split := sms.Split(".")
 	sms.coverWrite(split[len(split)-1])
 	s.Append("\n", "----------", sms.Split(" ")[0], "----------", "\n")
+}
+
+func (s *String) cutHumpMessage(hump string) {
+	sms := Make(hump)
+	split := sms.Split(".")
+	sms.coverWrite(split[len(split)-1])
+	sms.coverWrite(humpName(sms.Split(" ")[0]))
+	s.appendAny(sms)
 }
 
 // AppendSpilt  拼接字符串后返回String
@@ -104,66 +131,6 @@ func runesToBytes(rune []rune) []byte {
 	}
 	return bs
 }
-
-// appendKind  拼接字符串
-func (s *String) appendKind(join any) int {
-	kind := reflect.ValueOf(join).Kind()
-	switch kind {
-	case 24:
-		return ReturnValue(s.writeString(join.(string))).(int)
-	case 8:
-		ReturnValue(s.WriteByte(join.(byte)))
-		return 1
-	case 2:
-		return appendInt(join.(int), &s.buf)
-	case 3:
-		return appendInt(int(join.(int8)), &s.buf)
-	case 4:
-		return appendInt(int(join.(int16)), &s.buf)
-	case 5:
-		return appendInt(int(join.(int32)), &s.buf)
-	case 6:
-		return appendInt(int(join.(int64)), &s.buf)
-	case 7:
-		return appendUint64(uint64(join.(uint)), &s.buf)
-	case 9:
-		return appendUint64(uint64(join.(uint16)), &s.buf)
-	case 10:
-		return appendUint64(uint64(join.(uint32)), &s.buf)
-	case 11:
-		return appendUint64(join.(uint64), &s.buf)
-	case 13:
-		l1 := s.Len()
-		genericFtoa(&s.buf, float64(join.(float32)), 'f', 2, 32)
-		return s.Len() - l1
-	case 14:
-		l1 := s.Len()
-		genericFtoa(&s.buf, join.(float64), 'f', 2, 32)
-		return s.Len() - l1
-	case 1:
-		if join.(bool) {
-			return ReturnValue(s.writeString(TRUE)).(int)
-		} else {
-			return ReturnValue(s.writeString(FALSE)).(int)
-		}
-	case 22:
-		return ReturnValue(s.writeString(reflect.ValueOf(join).MethodByName("String").Call(nil)[0].String())).(int)
-
-	default:
-		switch join.(type) {
-		case time.Time:
-			s.strTime(join.(time.Time))
-		case *String:
-			return ReturnValue(s.Write(join.(*String).buf)).(int)
-		case []byte:
-			return ReturnValue(s.Write(join.([]byte))).(int)
-		default:
-			panic("unsupported join type")
-		}
-	}
-	return -1
-}
-
 func (s *String) Marshal(model any) {
 	var values reflect.Value
 	var types reflect.Type
