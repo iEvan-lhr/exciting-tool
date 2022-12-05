@@ -1,10 +1,19 @@
 package tools
 
 import (
+	"log"
 	"testing"
+	"time"
 )
 
 func TestName(t *testing.T) {
-	//s1 := Strings("").Append("insert userinfo values(").AppendSpiltLR(",", "", "", 4, 5, 6, 7, 8, 9, 10).Append(")")
-	//log.Println(s1.String())
+	log.Println(Make(time.Now()))
+	type User struct {
+		UserName string
+		Password string
+		Order    float64
+	}
+	for i, i2 := range MarshalMap(User{UserName: "foo", Password: "bar", Order: 3.23}) {
+		log.Println(i, i2)
+	}
 }

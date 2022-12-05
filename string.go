@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"reflect"
+	"time"
 	"unicode/utf8"
 	"unsafe"
 )
@@ -147,6 +148,8 @@ func (s *String) appendAny(join any) int {
 		} else {
 			return ReturnValue(s.writeString(FALSE)).(int)
 		}
+	case time.Time:
+		s.strTime(join.(time.Time))
 	default:
 		if reflect.ValueOf(join).Kind() == 22 {
 			return ReturnValue(s.writeString(reflect.ValueOf(join).MethodByName("String").Call(nil)[0].String())).(int)
@@ -166,44 +169,6 @@ func (s *String) Append(join ...any) *String {
 	for i := range join {
 		s.appendAny(join[i])
 	}
-	return s
-}
-
-// AppendSpilt  拼接字符串后返回String
-func (s *String) AppendSpilt(join ...any) *String {
-	var split = &String{}
-	for i := range join {
-		if i == 0 {
-			split.Append(join[i])
-		} else if i == len(join)-1 {
-			s.appendAny(join[i])
-		} else {
-			s.appendAny(join[i])
-			s.Append(split)
-		}
-
-	}
-	return s
-}
-
-// AppendSpiltLR  拼接字符串后返回String
-func (s *String) AppendSpiltLR(join ...any) *String {
-	var split, l, r = &String{}, &String{}, &String{}
-	if len(join) < 3 {
-		panic("Add Lens<3")
-	}
-	split.appendAny(join[0])
-	l.appendAny(join[1])
-	r.appendAny(join[2])
-	for i := 3; i < len(join)-1; i++ {
-		s.appendAny(l)
-		s.appendAny(join[i])
-		s.appendAny(r)
-		s.Append(split)
-	}
-	s.appendAny(l)
-	s.appendAny(join[len(join)-1])
-	s.appendAny(r)
 	return s
 }
 
@@ -422,20 +387,6 @@ func (s *String) CheckIsNull() bool {
 	return true
 }
 
-// RunesToBytes  Runes转bytes
-func runesToBytes(rune []rune) []byte {
-	size := 0
-	for _, r := range rune {
-		size += utf8.RuneLen(r)
-	}
-	bs := make([]byte, size)
-	count := 0
-	for _, r := range rune {
-		count += utf8.EncodeRune(bs[count:], r)
-	}
-	return bs
-}
-
 func (s *String) indexByRune(r rune) int {
 	if s.runes == nil || len(s.runes) == 0 {
 		s.runes = bytes.Runes(s.buf)
@@ -446,16 +397,4 @@ func (s *String) indexByRune(r rune) int {
 		}
 	}
 	return -1
-}
-
-func checkBytes(s, str []byte) bool {
-	if inTF(len(s), len(str)) {
-		for i, v := range str {
-			if s[i] != v {
-				return false
-			}
-		}
-		return true
-	}
-	return false
 }

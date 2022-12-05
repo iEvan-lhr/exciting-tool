@@ -28,6 +28,8 @@ func Unmarshal(v interface{}, str interface{}) {
 	switch str.(type) {
 	case string:
 		reflect.ValueOf(str).Elem().Set(reflect.ValueOf(string(s)))
+	case reflect.Value:
+
 	default:
 		ExecError(json.Unmarshal(s, &str))
 	}
