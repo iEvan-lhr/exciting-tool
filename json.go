@@ -70,7 +70,12 @@ func UMarshal(v, str interface{}) {
 	for j := 0; j < typ.NumField(); j++ {
 		switch values.Field(j).Interface().(type) {
 		case *String:
-			values.Field(j).Set(reflect.ValueOf(Make(m[typ.Field(j).Tag.Get("json")])))
+			flo := m[typ.Field(j).Tag.Get("json")].(float64)
+			if float64(int(flo)) == flo {
+				values.Field(j).Set(reflect.ValueOf(Make(int(flo))))
+			} else {
+				values.Field(j).Set(reflect.ValueOf(Make(flo)))
+			}
 		}
 	}
 	return

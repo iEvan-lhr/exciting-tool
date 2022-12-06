@@ -32,9 +32,9 @@ func TestName(t *testing.T) {
 	//Error(err)
 	//m := make(map[string]string)
 	u := User{}
-	UMarshal(User{Id: 23132, Username: "foo", Password: Make("bar"), Identity: "123sakdjwe", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"}, &u)
+	UMarshal("{\"den_key\":\"ansssss\",\"id\":23132,\"identity\":\"123sakdjwe\",\"password\":2.31,\"qr_code\":\"982j32\",\"talking_key\":\"qwesad\",\"username\":\"foo\"}", &u)
 	log.Println(Make(u))
-	//log.Println(string(Marshal(User{Id: 23132, Username: "foo", Password: Make("bar"), Identity: "123sakdjwe", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"})))
+	log.Println(string(Marshal(User{Id: 23132, Username: "foo", Password: Make("bar"), Identity: "123sakdjwe", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"})))
 
 }
 
