@@ -6,15 +6,17 @@ import (
 )
 
 func TestError(t *testing.T) {
-	temp := &ParseError{
-		values: nil,
-		err:    nil,
-		isErr:  true,
+	type App struct {
+		AppName  string `json:"app_name"`
+		Password string `json:"password"`
 	}
-	temp1 := *temp
-	temp1.isErr = false
-	UnMarshal(nil, temp)
-	log.Println(temp.isErr, temp1.isErr)
+	//marshal, _ := json.Marshal(App{
+	//	AppName:  "追云鹿",
+	//	Password: "ZXC000",
+	//})
+	a := App{}
+
+	log.Println(UnMarshal(nil, &a))
 }
 
 func Success(str string) string {

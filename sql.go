@@ -18,3 +18,9 @@ func Query(model any) string {
 func Update(model any) {
 
 }
+
+func Check(model any) string {
+	s := String{}
+	s.checkStruct(model)
+	return s.string()
+}

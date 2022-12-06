@@ -128,6 +128,28 @@ func (s *String) queryStruct(model any) {
 	}
 }
 
+func (s *String) checkStruct(model any) {
+	values, typ := returnValAndTyp(model)
+	s.appendAny(Select)
+	s.cutHumpMessage(values.String())
+	var where byte
+	for j := 0; j < typ.NumField(); j++ {
+		if !values.Field(j).IsZero() && typ.Field(j).Tag.Get("marshal") == "check" {
+			if where == 0 {
+				s.appendAny(" where ")
+				where++
+			} else {
+				s.appendAny(" and ")
+			}
+			switch values.Field(j).Kind() {
+			case reflect.Slice:
+			default:
+				s.Append(humpName(typ.Field(j).Name), "=", "'", values.Field(j).Interface(), "'")
+			}
+		}
+	}
+}
+
 func (s *String) cutStructMessage(sm string) {
 	sms := Make(sm)
 	split := sms.Split(".")
