@@ -107,16 +107,7 @@ func generateHead(model any) (*String, int) {
 }
 
 func (s *String) queryStruct(model any) {
-	var values reflect.Value
-	var typ reflect.Type
-	switch reflect.ValueOf(model).Kind() {
-	case reflect.Struct:
-		values = reflect.ValueOf(model)
-		typ = reflect.TypeOf(model)
-	case reflect.Pointer:
-		values = reflect.ValueOf(model).Elem()
-		typ = reflect.TypeOf(model).Elem()
-	}
+	values, typ := returnValAndTyp(model)
 	s.appendAny(Select)
 	s.cutHumpMessage(values.String())
 	var where byte
@@ -190,6 +181,7 @@ func (s *String) AppendSpiltLR(join ...any) *String {
 	return s
 }
 
+// checkBytes 比较两个byte切片的值
 func checkBytes(s, str []byte) bool {
 	if inTF(len(s), len(str)) {
 		for i, v := range str {
