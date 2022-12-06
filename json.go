@@ -3,6 +3,7 @@ package tools
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"reflect"
 )
 
@@ -44,4 +45,62 @@ func UnmarshalByOriginal(v interface{}, str interface{}) {
 	default:
 		ExecError(json.Unmarshal(ReturnValueByTwo(json.Marshal(v)).([]byte), &str))
 	}
+}
+
+func UMarshal(v, str interface{}) {
+	var marshal []byte
+	var m map[string]any
+	switch v.(type) {
+	case []byte:
+		marshal = v.([]byte)
+		eatError(json.Unmarshal(marshal, &m))
+	case string:
+		marshal = []byte(v.(string))
+		eatError(json.Unmarshal(marshal, &m))
+	default:
+		marshal, m = marshalMap(v)
+		eatError(json.Unmarshal(marshal, &m))
+	}
+	eatError(json.Unmarshal(marshal, str))
+	values, typ := returnValAndTyp(str)
+	if typ.Kind() == reflect.Map {
+		values.Set(reflect.ValueOf(m))
+		return
+	}
+	for j := 0; j < typ.NumField(); j++ {
+		switch values.Field(j).Interface().(type) {
+		case *String:
+			values.Field(j).Set(reflect.ValueOf(Make(m[typ.Field(j).Tag.Get("json")])))
+		}
+	}
+	return
+}
+
+func Marshal(v interface{}) []byte {
+	values, typ := returnValAndTyp(v)
+	m := make(map[string]string)
+	for j := 0; j < typ.NumField(); j++ {
+		if !values.Field(j).IsZero() {
+			m[typ.Field(j).Tag.Get("json")] = Make(values.Field(j).Interface()).string()
+		}
+	}
+	return ReturnValue(json.Marshal(m)).([]byte)
+}
+
+func marshalMap(v interface{}) ([]byte, map[string]any) {
+	values, typ := returnValAndTyp(v)
+	m := make(map[string]any)
+	for j := 0; j < typ.NumField(); j++ {
+		if values.Field(j).Kind() != reflect.Slice && values.Field(j).Kind() != reflect.Map && !values.Field(j).IsZero() {
+			switch values.Field(j).Interface().(type) {
+			case *String:
+				m[typ.Field(j).Tag.Get("json")] = Make(values.Field(j).Interface())
+			default:
+				m[typ.Field(j).Tag.Get("json")] = values.Field(j).Interface()
+			}
+
+		}
+	}
+	log.Println(m)
+	return ReturnValue(json.Marshal(m)).([]byte), m
 }

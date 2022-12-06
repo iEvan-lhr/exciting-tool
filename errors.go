@@ -76,6 +76,10 @@ func LogError(err error) {
 	}
 }
 
+func eatError(err error) {
+
+}
+
 func DeferError(err error, exec interface{}, args ...interface{}) {
 	defer func() {
 		var values []reflect.Value

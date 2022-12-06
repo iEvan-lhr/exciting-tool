@@ -248,6 +248,8 @@ func returnValAndTyp(model any) (values reflect.Value, types reflect.Type) {
 	case reflect.Pointer:
 		values = reflect.ValueOf(model).Elem()
 		types = reflect.TypeOf(model).Elem()
+	case reflect.Map:
+
 	}
 	return
 }

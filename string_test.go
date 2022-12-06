@@ -2,7 +2,6 @@ package tools
 
 import (
 	"log"
-	"os"
 	"testing"
 	"time"
 )
@@ -19,26 +18,32 @@ func TestName(t *testing.T) {
 	//log.Println(Make("").Save(User{Id: 23132, Username: "foo", Password: "bar", Identity: "123sakdjwe", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"}))
 	//s := Make("99999")
 	//s.ReplaceLastStr(1, "888")
-	var users []User
-	user := User{Id: 23132, Username: "foo", Password: "bar", Identity: "123sakdjwe", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"}
-	for i := 0; i < 560; i++ {
-		users = append(users, user)
-	}
-	save := Save(users)
-	var buf []byte
-	for i := range save {
-		buf = append(buf, save[i].buf...)
-	}
-	err := os.WriteFile("testing.txt", buf, 0666)
-	Error(err)
+	//var users []User
+	//user := User{Id: 23132, Username: "foo", Password: "bar", Identity: "123sakdjwe", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"}
+	//for i := 0; i < 560; i++ {
+	//	users = append(users, user)
+	//}
+	//save := Save(users)
+	//var buf []byte
+	//for i := range save {
+	//	buf = append(buf, save[i].buf...)
+	//}
+	//err := os.WriteFile("testing.txt", buf, 0666)
+	//Error(err)
+	//m := make(map[string]string)
+	u := User{}
+	UMarshal(User{Id: 23132, Username: "foo", Password: Make("bar"), Identity: "123sakdjwe", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"}, &u)
+	log.Println(Make(u))
+	//log.Println(string(Marshal(User{Id: 23132, Username: "foo", Password: Make("bar"), Identity: "123sakdjwe", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"})))
+
 }
 
 type User struct {
-	Id         int    `json:"id" marshal:"auto_insert"`
-	Username   string `json:"username"`
-	Password   string `json:"password"`
-	Identity   string `json:"identity"`
-	QrCode     string `json:"qr_code"`
-	DenKey     string `json:"den_key"`
-	TalkingKey string `json:"talking_key"`
+	Id         int     `json:"id" marshal:"auto_insert"`
+	Username   string  `json:"username"`
+	Password   *String `json:"password"`
+	Identity   string  `json:"identity"`
+	QrCode     string  `json:"qr_code"`
+	DenKey     string  `json:"den_key"`
+	TalkingKey string  `json:"talking_key"`
 }
