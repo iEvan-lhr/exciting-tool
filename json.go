@@ -3,7 +3,6 @@ package tools
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"reflect"
 )
 
@@ -106,6 +105,5 @@ func marshalMap(v interface{}) ([]byte, map[string]any) {
 
 		}
 	}
-	log.Println(m)
 	return ReturnValue(json.Marshal(m)).([]byte), m
 }

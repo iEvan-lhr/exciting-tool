@@ -1,5 +1,7 @@
 package tools
 
+import "bytes"
+
 // humpName 格式化驼峰命名
 func humpName(buf string) (ans []byte) {
 	if len(buf) > 0 {
@@ -17,4 +19,18 @@ func humpName(buf string) (ans []byte) {
 		}
 	}
 	return
+}
+
+func righteousCharacter(s *String) *String {
+	var runes []rune
+	for _, v := range bytes.Runes(s.buf) {
+		if v == '\'' || v == '`' {
+			runes = append(runes, append([]rune(`\`), v)...)
+		} else {
+			runes = append(runes, v)
+		}
+	}
+	s.runes = runes
+	s.buf = runesToBytes(s.Runes())
+	return s
 }

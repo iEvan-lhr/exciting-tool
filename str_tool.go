@@ -46,7 +46,7 @@ func generateModel(values reflect.Value, types reflect.Type) (result []*String) 
 			vars.appendAny("NULL,")
 		default:
 			tags.Append("`", humpName(types.Field(j).Name), "`,")
-			vars.Append("'", values.Field(j).Interface(), "',")
+			vars.Append("'", righteousCharacter(Make(values.Field(j).Interface())), "',")
 		}
 	}
 	tags.ReplaceLastStr(1, ")")
@@ -76,7 +76,7 @@ func generateModels(values reflect.Value) (result []*String) {
 			case "auto_insert":
 				vars.appendAny("NULL,")
 			default:
-				vars.Append("'", v.Field(j).Interface(), "',")
+				vars.Append("'", righteousCharacter(Make(v.Field(j).Interface())), "',")
 			}
 		}
 		vars.ReplaceLastStr(1, "),")
@@ -122,7 +122,7 @@ func (s *String) queryStruct(model any) {
 			switch values.Field(j).Kind() {
 			case reflect.Slice:
 			default:
-				s.Append(humpName(typ.Field(j).Name), "=", "'", values.Field(j).Interface(), "'")
+				s.Append(humpName(typ.Field(j).Name), "=", "'", righteousCharacter(Make(values.Field(j).Interface())), "'")
 			}
 		}
 	}
@@ -144,7 +144,7 @@ func (s *String) checkStruct(model any) {
 			switch values.Field(j).Kind() {
 			case reflect.Slice:
 			default:
-				s.Append(humpName(typ.Field(j).Name), "=", "'", values.Field(j).Interface(), "'")
+				s.Append(humpName(typ.Field(j).Name), "=", "'", righteousCharacter(Make(values.Field(j).Interface())), "'")
 			}
 		}
 	}
