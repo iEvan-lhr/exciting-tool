@@ -8,7 +8,7 @@ import (
 func TestName(t *testing.T) {
 	u := User{Id: 23132, Username: "foo", Password: "bar", Identity: "324213", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"}
 	users := []User{u, u, u, u, u, u, u}
-	log.Println(Save(users))
+	log.Println(SaveTable(users, "t_info_user"))
 }
 
 type User struct {

@@ -33,6 +33,17 @@ func marshalStruct(model interface{}) (result []*String) {
 	return nil
 }
 
+func marshalStructTable(model interface{}, tableName string) (result []*String) {
+	values, typ := returnValAndTyp(model)
+	switch values.Kind() {
+	case reflect.Struct:
+		return generateModelTable(values, typ, tableName)
+	case reflect.Slice:
+		return generateModelsByTableName(values, tableName)
+	}
+	return nil
+}
+
 func generateModel(values reflect.Value, types reflect.Type) (result []*String) {
 	s := Make("insert into ")
 	s.cutHumpMessage(values.String())
@@ -56,6 +67,28 @@ func generateModel(values reflect.Value, types reflect.Type) (result []*String) 
 	return
 }
 
+func generateModelTable(values reflect.Value, types reflect.Type, tableName string) (result []*String) {
+	s := Make("insert into ")
+	s.appendAny(tableName)
+	tags := Make(" (")
+	vars := Make(" values(")
+	for j := 0; j < types.NumField(); j++ {
+		switch types.Field(j).Tag.Get("marshal") {
+		case "off":
+		case "auto_insert":
+			tags.Append("`", humpName(types.Field(j).Name), "`,")
+			vars.appendAny("NULL,")
+		default:
+			tags.Append("`", humpName(types.Field(j).Name), "`,")
+			vars.Append("'", righteousCharacter(Make(values.Field(j).Interface())), "',")
+		}
+	}
+	tags.ReplaceLastStr(1, ")")
+	vars.ReplaceLastStr(1, ")")
+	s.Append(tags, vars)
+	result = append(result, s)
+	return
+}
 func generateModels(values reflect.Value) (result []*String) {
 	if !(values.Len() > 0) {
 		return
@@ -87,10 +120,60 @@ func generateModels(values reflect.Value) (result []*String) {
 	return
 }
 
+func generateModelsByTableName(values reflect.Value, tableName string) (result []*String) {
+	if !(values.Len() > 0) {
+		return
+	}
+	head, lens := generateHeadByTable(values.Index(0).Interface(), tableName)
+	s := Make(head)
+	for i := 0; i < values.Len(); i++ {
+		v, t := returnValAndTyp(values.Index(i).Interface())
+		if i != 0 && i%200 == 0 {
+			s.ReplaceLastStr(1, ";\n")
+			result = append(result, s)
+			s = Make(head)
+		}
+		vars := Make("(")
+		for j := 0; j < lens; j++ {
+			switch t.Field(j).Tag.Get("marshal") {
+			case "off":
+			case "auto_insert":
+				vars.appendAny("NULL,")
+			default:
+				vars.Append("'", righteousCharacter(Make(v.Field(j).Interface())), "',")
+			}
+		}
+		vars.ReplaceLastStr(1, "),")
+		s.appendAny(vars)
+	}
+	s.ReplaceLastStr(1, ";")
+	result = append(result, s)
+	return
+}
+
 func generateHead(model interface{}) (*String, int) {
 	values, typ := returnValAndTyp(model)
 	s := Make("insert into ")
 	s.cutHumpMessage(values.String())
+	tags := Make(" (")
+	for j := 0; j < typ.NumField(); j++ {
+		switch typ.Field(j).Tag.Get("marshal") {
+		case "off":
+		case "auto_insert":
+			tags.Append("`", humpName(typ.Field(j).Name), "`,")
+		default:
+			tags.Append("`", humpName(typ.Field(j).Name), "`,")
+		}
+	}
+	tags.ReplaceLastStr(1, ")")
+	s.Append(tags, " values")
+	return s, typ.NumField()
+}
+
+func generateHeadByTable(model interface{}, tableName string) (*String, int) {
+	_, typ := returnValAndTyp(model)
+	s := Make("insert into ")
+	s.appendAny(tableName)
 	tags := Make(" (")
 	for j := 0; j < typ.NumField(); j++ {
 		switch typ.Field(j).Tag.Get("marshal") {
