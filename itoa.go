@@ -1,6 +1,6 @@
 package tools
 
-func Itoa(i any) *String {
+func Itoa(i interface{}) *String {
 	s := String{}
 	if s.appendAny(i) != -1 {
 		return &s

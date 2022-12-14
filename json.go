@@ -48,7 +48,7 @@ func UnmarshalByOriginal(v interface{}, str interface{}) {
 
 func UMarshal(v, str interface{}) {
 	var marshal []byte
-	var m map[string]any
+	var m map[string]interface{}
 	switch v.(type) {
 	case []byte:
 		marshal = v.([]byte)
@@ -91,9 +91,9 @@ func Marshal(v interface{}) []byte {
 	return ReturnValue(json.Marshal(m)).([]byte)
 }
 
-func marshalMap(v interface{}) ([]byte, map[string]any) {
+func marshalMap(v interface{}) ([]byte, map[string]interface{}) {
 	values, typ := returnValAndTyp(v)
-	m := make(map[string]any)
+	m := make(map[string]interface{})
 	for j := 0; j < typ.NumField(); j++ {
 		if values.Field(j).Kind() != reflect.Slice && values.Field(j).Kind() != reflect.Map && !values.Field(j).IsZero() {
 			switch values.Field(j).Interface().(type) {

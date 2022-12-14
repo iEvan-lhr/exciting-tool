@@ -29,7 +29,7 @@ func Strings(str string) *String {
 }
 
 // Make 根据指定类型来构建一个String
-func Make(value ...any) *String {
+func Make(value ...interface{}) *String {
 	s := &String{}
 	s.Append(value...)
 	return s
@@ -58,7 +58,7 @@ func (s *String) Bytes() []byte {
 }
 
 // Check 检查是否相等
-func (s *String) Check(str any) bool {
+func (s *String) Check(str interface{}) bool {
 	switch str.(type) {
 	case *String:
 		if inTF(len(s.buf), str.(*String).Len()) {
@@ -102,77 +102,77 @@ func (s *String) Check(str any) bool {
 }
 
 // appendAny  拼接字符串
-func (s *String) appendAny(join any) int {
-	switch join.(type) {
+func (s *String) appendAny(join ...interface{}) int {
+	switch join[0].(type) {
 	case *String:
-		return ReturnValue(s.Write(join.(*String).buf)).(int)
+		return ReturnValue(s.Write(join[0].(*String).buf)).(int)
 	case string:
-		return ReturnValue(s.writeString(join.(string))).(int)
+		return ReturnValue(s.writeString(join[0].(string))).(int)
 	case []byte:
-		return ReturnValue(s.Write(join.([]byte))).(int)
+		return ReturnValue(s.Write(join[0].([]byte))).(int)
 	case byte:
-		ReturnValue(s.WriteByte(join.(byte)))
+		ReturnValue(s.WriteByte(join[0].(byte)))
 		return 1
 	case int:
-		return appendInt(join.(int), &s.buf)
+		return appendInt(join[0].(int), &s.buf)
 	case int8:
-		return appendInt(int(join.(int8)), &s.buf)
+		return appendInt(int(join[0].(int8)), &s.buf)
 	case int16:
-		return appendInt(int(join.(int16)), &s.buf)
+		return appendInt(int(join[0].(int16)), &s.buf)
 	case int32:
-		return appendInt(int(join.(int32)), &s.buf)
+		return appendInt(int(join[0].(int32)), &s.buf)
 	case int64:
-		return appendInt(int(join.(int64)), &s.buf)
+		return appendInt(int(join[0].(int64)), &s.buf)
 	case uint:
-		return appendUint64(uint64(join.(uint)), &s.buf)
+		return appendUint64(uint64(join[0].(uint)), &s.buf)
 	case uint16:
-		return appendUint64(uint64(join.(uint16)), &s.buf)
+		return appendUint64(uint64(join[0].(uint16)), &s.buf)
 	case uint32:
-		return appendUint64(uint64(join.(uint32)), &s.buf)
+		return appendUint64(uint64(join[0].(uint32)), &s.buf)
 	case uint64:
-		return appendUint64(join.(uint64), &s.buf)
+		return appendUint64(join[0].(uint64), &s.buf)
 	case float32:
 		l1 := s.Len()
-		genericFtoa(&s.buf, float64(join.(float32)), 'f', 2, 32)
+		genericFtoa(&s.buf, float64(join[0].(float32)), 'f', 2, 32)
 		return s.Len() - l1
 	case float64:
 		l1 := s.Len()
-		genericFtoa(&s.buf, join.(float64), 'f', 2, 32)
+		genericFtoa(&s.buf, join[0].(float64), 'f', 2, 32)
 		return s.Len() - l1
 	case bool:
-		if join.(bool) {
+		if join[0].(bool) {
 			return ReturnValue(s.writeString(TRUE)).(int)
 		} else {
 			return ReturnValue(s.writeString(FALSE)).(int)
 		}
 	case time.Time:
-		s.strTime(join.(time.Time))
+		s.strTime(join[0].(time.Time))
 	default:
-		value := reflect.ValueOf(join)
+		value := reflect.ValueOf(join[0])
 		switch value.Kind() {
 		case reflect.Struct, reflect.Pointer:
 			if value.MethodByName("String").IsValid() {
 				return ReturnValue(s.writeString(value.MethodByName("String").Call(nil)[0].String())).(int)
 			} else {
-				s.Marshal(join)
+				s.Marshal(join[0])
 			}
 		case reflect.Slice:
 			for i := 0; i < value.Len(); i++ {
-				s.appendAny(value.Index(i).Interface())
+				s.appendAny(value.Index(i).Interface(), 1)
 			}
 		}
 	}
 	return -1
 }
 
-func (s *String) coverWrite(key any) *String {
+func (s *String) coverWrite(key interface{}) *String {
 	s.buf = nil
 	s.appendAny(key)
 	return s
 }
 
 // Append  拼接字符串后返回String
-func (s *String) Append(join ...any) *String {
+func (s *String) Append(join ...interface{}) *String {
 	for i := range join {
 		s.appendAny(join[i])
 	}
@@ -180,12 +180,12 @@ func (s *String) Append(join ...any) *String {
 }
 
 // AppendLens  拼接字符串后返回String
-func (s *String) AppendLens(join any) int {
+func (s *String) AppendLens(join interface{}) int {
 	return s.appendAny(join)
 }
 
 // Index 返回数据中含有字串的下标 没有返回-1
-func (s *String) Index(str any) int {
+func (s *String) Index(str interface{}) int {
 	switch str.(type) {
 	case *String:
 		return bytes.Index(s.buf, str.(*String).buf)
@@ -340,7 +340,7 @@ func (s *String) RemoveLastStr(lens int) {
 }
 
 // ReplaceLastStr 从尾部移除固定长度的字符
-func (s *String) ReplaceLastStr(lens int, str any) {
+func (s *String) ReplaceLastStr(lens int, str interface{}) {
 	s.buf = s.buf[:s.Len()-lens]
 	s.appendAny(str)
 	s.runes = bytes.Runes(s.buf)

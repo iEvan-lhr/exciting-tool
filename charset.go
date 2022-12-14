@@ -25,7 +25,7 @@ const digits = "0123456789abcdefghijklmnopqrstuvwxyz"
 
 // Float 此结构体用来进行自定义的Str拼接类型转换
 type Float struct {
-	Number any
+	Number interface{}
 	Fmt    byte
 	Pre    int
 }

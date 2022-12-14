@@ -22,7 +22,7 @@ func (s *String) strTime(t time.Time) {
 	s.appendAny(t.AppendFormat(b, timeLayout))
 }
 
-func marshalStruct(model any) (result []*String) {
+func marshalStruct(model interface{}) (result []*String) {
 	values, typ := returnValAndTyp(model)
 	switch values.Kind() {
 	case reflect.Struct:
@@ -87,7 +87,7 @@ func generateModels(values reflect.Value) (result []*String) {
 	return
 }
 
-func generateHead(model any) (*String, int) {
+func generateHead(model interface{}) (*String, int) {
 	values, typ := returnValAndTyp(model)
 	s := Make("insert into ")
 	s.cutHumpMessage(values.String())
@@ -106,7 +106,7 @@ func generateHead(model any) (*String, int) {
 	return s, typ.NumField()
 }
 
-func (s *String) queryStruct(model any) {
+func (s *String) queryStruct(model interface{}) {
 	values, typ := returnValAndTyp(model)
 	s.appendAny(Select)
 	s.cutHumpMessage(values.String())
@@ -128,7 +128,7 @@ func (s *String) queryStruct(model any) {
 	}
 }
 
-func (s *String) checkStruct(model any) {
+func (s *String) checkStruct(model interface{}) {
 	values, typ := returnValAndTyp(model)
 	s.appendAny(Select)
 	s.cutHumpMessage(values.String())
@@ -166,7 +166,7 @@ func (s *String) cutHumpMessage(hump string) {
 }
 
 // AppendSpilt  拼接字符串后返回String
-func (s *String) AppendSpilt(join ...any) *String {
+func (s *String) AppendSpilt(join ...interface{}) *String {
 	var split = &String{}
 	for i := range join {
 		if i == 0 {
@@ -183,7 +183,7 @@ func (s *String) AppendSpilt(join ...any) *String {
 }
 
 // AppendSpiltLR  拼接字符串后返回String
-func (s *String) AppendSpiltLR(join ...any) *String {
+func (s *String) AppendSpiltLR(join ...interface{}) *String {
 	var split, l, r = &String{}, &String{}, &String{}
 	if len(join) < 3 {
 		panic("Add Lens<3")
@@ -229,7 +229,7 @@ func runesToBytes(rune []rune) []byte {
 	}
 	return bs
 }
-func (s *String) Marshal(model any) {
+func (s *String) Marshal(model interface{}) {
 	values, types := returnValAndTyp(model)
 	s.cutStructMessage(values.String())
 	for j := 0; j < types.NumField(); j++ {
@@ -240,7 +240,7 @@ func (s *String) Marshal(model any) {
 	s.appendAny(EndMessage)
 }
 
-func returnValAndTyp(model any) (values reflect.Value, types reflect.Type) {
+func returnValAndTyp(model interface{}) (values reflect.Value, types reflect.Type) {
 	switch reflect.ValueOf(model).Kind() {
 	case reflect.Struct, reflect.Slice:
 		values = reflect.ValueOf(model)
@@ -254,7 +254,7 @@ func returnValAndTyp(model any) (values reflect.Value, types reflect.Type) {
 	return
 }
 
-func MarshalMap(model any) map[string]string {
+func MarshalMap(model interface{}) map[string]string {
 	modelMap := make(map[string]string)
 	var values reflect.Value
 	var types reflect.Type

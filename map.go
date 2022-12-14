@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-func Ok(value any, ok bool) any {
+func Ok(value interface{}, ok bool) interface{} {
 	if ok {
 		return value
 	}
@@ -12,7 +12,7 @@ func Ok(value any, ok bool) any {
 }
 
 type Spider struct {
-	Values any
+	Values interface{}
 	Key    []byte
 	Next   [255]*Spider
 	sync   sync.Mutex
@@ -20,21 +20,21 @@ type Spider struct {
 	len    int
 }
 
-func (s *Spider) Add(key any, value any) {
+func (s *Spider) Add(key interface{}, value interface{}) {
 	spider := s.getWriteSpider(s.reader.coverWrite(key).buf)
 	//log.Println(spider)
 	spider.add(value)
 }
 
-func (s *Spider) add(value any) {
+func (s *Spider) add(value interface{}) {
 	s.Values = value
 }
 
-func (s *Spider) Get(key any) any {
+func (s *Spider) Get(key interface{}) interface{} {
 	return s.getReadSpider(s.reader.coverWrite(key).buf).Values
 }
 
-func MakeSpider(key any, value any) *Spider {
+func MakeSpider(key interface{}, value interface{}) *Spider {
 	spider := &Spider{}
 	spider.reader = &String{}
 	spider.Key = spider.reader.Append(key).buf

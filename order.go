@@ -2,9 +2,9 @@ package tools
 
 type Map struct {
 	key   map[*String]int
-	value []any
+	value []interface{}
 }
 
-func (m Map) Set(key, value any) {
+func (m Map) Set(key, value interface{}) {
 
 }
