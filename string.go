@@ -150,7 +150,7 @@ func (s *String) appendAny(join ...interface{}) int {
 	default:
 		value := reflect.ValueOf(join[0])
 		switch value.Kind() {
-		case reflect.Struct, reflect.Pointer:
+		case reflect.Struct, reflect.Ptr:
 			if value.MethodByName("String").IsValid() {
 				return ReturnValue(s.writeString(value.MethodByName("String").Call(nil)[0].String())).(int)
 			} else {

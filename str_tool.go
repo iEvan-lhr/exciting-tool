@@ -245,7 +245,7 @@ func returnValAndTyp(model interface{}) (values reflect.Value, types reflect.Typ
 	case reflect.Struct, reflect.Slice:
 		values = reflect.ValueOf(model)
 		types = reflect.TypeOf(model)
-	case reflect.Pointer:
+	case reflect.Ptr:
 		values = reflect.ValueOf(model).Elem()
 		types = reflect.TypeOf(model).Elem()
 	case reflect.Map:
@@ -262,7 +262,7 @@ func MarshalMap(model interface{}) map[string]string {
 	case reflect.Struct:
 		values = reflect.ValueOf(model)
 		types = reflect.TypeOf(model)
-	case reflect.Pointer:
+	case reflect.Ptr:
 		values = reflect.ValueOf(model).Elem()
 		types = reflect.TypeOf(model).Elem()
 	}
