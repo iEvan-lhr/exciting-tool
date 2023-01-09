@@ -2,20 +2,9 @@
 
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](https://opensource.org/licenses/Apache-2.0)
 
+[English](./README.md) | [简体中文](./README-CN.md)
+
 exciting-tool 是一个理想化的全能的 Go 的工具包，涉及的内容包括:字符串的处理（拼接、转换等等）、结构体的日志遍历（示例）、原生sql的自动拼接与处理、更方便的map（开发中）、json解析、http请求发送等等。
-
-## Sponsors
-
-If you find SFTPGo useful please consider supporting this Open Source project.
-
-Maintaining and evolving SFTPGo is a lot of work - easily the equivalent of a full time job - for me.
-
-I'd like to make SFTPGo into a sustainable long term project and would not like to introduce a dual licensing option and limit some features to the proprietary version only.
-
-If you use SFTPGo, it is in your best interest to ensure that the project you rely on stays healthy and well maintained.
-This can only happen with your donations and [sponsorships](https://github.com/sponsors/drakkan) :heart:
-
-If you just take and don't return anything back, the project will die in the long run and you will be forced to pay for a similar proprietary solution.
 
 <h2>如何使用</h2>
 <hr/>
