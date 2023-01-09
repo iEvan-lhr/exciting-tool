@@ -14,17 +14,54 @@ Welcome everyone to help me  :heart::heart::heart:
 
 ## important hint ⚠⚠⚠⚠⚠
 
+☠ Need GO version 1.18 or more ☠ 
+
+☀ You can use the code of the Lowversion branch in the low version ☀
+
 Some functions may be unsafe, and some functions are only modified based on the GO native bag. Therefore, please pay attention to the use of some functions in actual use. I will mark as much as possible where possible problems may occur.
 
-<h2>如何使用</h2>
-<hr/>
-<h3>String</h3>
-<p>
-    使用下面的方法来构造一个String
+## HOW TO USE
+
+Use the following code to construct a full -featured String
    
 ```bash
     tools.Make(str)
 ```    
+Common Functions
+
+✔The following functions support the use of String, full -featured String, [] byte as the parameters
+
+```plain
+You should run "cf config" to configure your handle, password and code
+templates at first.
+
+If you want to compete, the best command is "cf race".
+
+Function:
+  Index(str any)           The next bid search, while supporting the Rune type retrieval
+  Append(join any)         Add content to the string to support adding all basic types and extension basic types 
+                           (including int, float, BOOL, int32, int16, string, str, byte, [] byte ...). 
+                           Can be added (PS: pointer is passed in)
+  Make(obj any)            If the structure is used to construct and the structure 
+                           does not implement the String () method, the full attribute printing will be performed. 
+                           The example is as follows:
+                           ----------User----------
+                           Id:23132
+                           Username:foo
+                           Password:bar
+                           Identity:324213
+                           QrCode:982j32
+                           DenKey:ansssss
+                           TalkingKey:qwesad
+                           ----------END----------
+  FirstUpper()
+  FirstLower()
+  Check(str any)
+  RemoveLastStr(lens)
+  RemoveIndexStr(lens)
+  Spilt(str any)
+
+```
 
 支持的方法：<br/>
 <a>Index(str)</a>  下标检索 str可以为string、byte、bytes、rune<br/>
