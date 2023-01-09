@@ -9,7 +9,7 @@
     使用下面的方法来构造一个String
    
 ```bash
-    tool.Strings(str)
+    tools.Make(str)
 ```    
 
 支持的方法：<br/>
