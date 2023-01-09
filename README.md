@@ -32,10 +32,6 @@ Common Functions
 ✔The following functions support the use of String, full -featured String, [] byte as the parameters
 
 ```plain
-You should run "cf config" to configure your handle, password and code
-templates at first.
-
-If you want to compete, the best command is "cf race".
 
 Function:
   Index(str any)           The next bid search, while supporting the Rune type retrieval
