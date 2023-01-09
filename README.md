@@ -39,11 +39,13 @@ If you want to compete, the best command is "cf race".
 
 Function:
   Index(str any)           The next bid search, while supporting the Rune type retrieval
-  Append(join any)         Add content to the string to support adding all basic types and extension basic types 
+  Append(join any)         Add content to the string to support adding 
+                           all basic types and extension basic types 
                            (including int, float, BOOL, int32, int16, string, str, byte, [] byte ...). 
                            Can be added (PS: pointer is passed in)
   Make(obj any)            If the structure is used to construct and the structure 
-                           does not implement the String () method, the full attribute printing will be performed. 
+                           does not implement the String () method,
+                           the full attribute printing will be performed. 
                            The example is as follows:
                            ----------User----------
                            Id:23132
