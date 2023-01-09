@@ -17,40 +17,78 @@ exciting-tool 是一个理想化的全能的 Go 的工具包，涉及的内容�
 
 ## 重要提示  ⚠⚠⚠⚠⚠
 
-部分功能可能不安全，部分功能功能只是基于Go原生的包进行了修改，所以在实际使用中还请注意部分功能的使用，我会尽可能的标注出可能出现问题的地方。
 
-<h2>如何使用</h2>
-<hr/>
-<h3>String</h3>
-<p>
-    使用下面的方法来构造一个String
+☠ 需要GO版本1.18或更多 ☠
+
+☀ 您可以在低版本中使用Lowversion分支的代码 ☀
+
+某些功能可能不安全，并且某些功能仅在GO本地袋中修改D。因此，请注意实际使用中某些功能的使用。在可能的问题上，我会尽可能地标记。
+
+## 如何使用
+
+```bash
+   go get https://github.com/iEvan-lhr/exciting-tool
+```    
+## 全功能 String
+
+# 相同的功能
+
+✔以下功能支持使用String，全功能String，[]byte
+
+Use the following code to construct a full -featured String
    
 ```bash
     tools.Make(str)
 ```    
+Common Functions
 
-支持的方法：<br/>
-<a>Index(str)</a>  下标检索 str可以为string、byte、bytes、rune<br/>
-<a>FirstUpper()</a>/<a>FirstLower()</a> 首字母大小写<br/>
-<a>Check(str)</a> 比较 支持传入数据为string、bytes、rune<br/>
-<a>Append(join)</a> 向字符串中添加内容 支持添加所有基本类型及扩展基本类型(包括int,float,bool,int32,int16,string,str,byte,[]byte...) 若结构体实现了String()方法也可以添加(ps:指针传入)<br/>
-<a>RemoveLastStr(lens)</a>/<a>RemoveLastStrByRune()</a> 移除尾部的元素 <br/>
-<a>RemoveIndexStr(lens)</a>/<a>RemoveIndexStrByRune()</a> 移除头部的元素 <br/>
-<a>Spilt(str)</a> 按照str截取字符串 支持传入数据为string、bytes<br/>
-<a>CheckIsNull()</a> 检查字符串是否为空 只包含' '与'\t'与'\n'都会被视为不合法的值<br/>
+✔The following functions support the use of String, full -featured String, [] byte as the parameters
 
-#### **......**
+```plain
 
-</p>
+Function:
+  Index(str any)           The next bid search, while supporting the Rune type retrieval
+  Append(join any)         Add content to the string to support adding 
+                           all basic types and extension basic types 
+                           (including int, float, BOOL, int32, int16, string, str, byte, [] byte ...). 
+                           Can be added (PS: pointer is passed in)
+  Make(obj any)            If the structure is used to construct and the structure 
+                           does not implement the String () method,
+                           the full attribute printing will be performed. 
+                           The example is as follows:
+                           ----------User----------
+                           Id:23132
+                           Username:foo
+                           Password:bar
+                           Identity:324213
+                           QrCode:982j32
+                           DenKey:ansssss
+                           TalkingKey:qwesad
+                           ----------END----------
+  FirstUpper()
+  FirstLower()
+  Check(str any)
+  RemoveLastStr(lens)
+  RemoveIndexStr(lens)
+  Spilt(str any)
+  CheckIsNull()
 
-<hr/>
-<h3>错误处理</h3>
-<p>
-支持的方法：<br/>
-<a>ReturnValueByTwo</a>  
-<a>ReturnValue</a> 传入返回值为两个的方法 返回首个元素 若错误不为空则会log(err)<br/>
-<a>PanicError</a> 传入结束方法  支持多方法传入 例如 file.close() res.close() 若错误不为空则会panic(err)<br/>
-<a>ExecError</a> 传入方法 获取返回值错误 若错误不为空则会panic(err)<br/>
-<a>logError</a> 传入方法 获取返回值错误 若错误不为空则会log(err)<br/>
-<a>ExecGoFunc</a> 传入异步执行方法 内部会自动defer捕捉方法可能出现的错误 任务为异步执行<br/>
-</p>
+```
+
+## Error treatment
+
+```plain
+
+Function:
+  ReturnValueByTwo()       The return value after the automatic processing, 
+                           if the error is not empty, will panic(err)
+  ReturnValue()            The return value after the automatic processing, 
+                           if the error is not empty, will log(err)
+  ExecGoFunc()             The error task that can be automatically defined in the asynchronous 
+                           execution method internally is the asynchronous
+                           execution of the error task that may occur
+  ExecError()
+  PanicError()
+  logError()
+
+```
