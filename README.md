@@ -2,6 +2,20 @@
 
 [![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](https://opensource.org/licenses/Apache-2.0)
 
+[English](./README.md) | [简体中文](./README-CN.md)
+
+Excing-Tool is an ideal omnidirectional GO toolkit. The content involved includes: string processing (stitching, conversion, etc.), the log traversal of the structure (example), the automatic stitching and processing of the native SQL, and the more Convenient Map (under development), JSON parsing, HTTP request sending, and so on.
+
+## Remark information
+
+The author does not guarantee to update the content in time, but will try his best to improve the document to help users use it.
+
+Welcome everyone to help me  :heart::heart::heart:
+
+## important hint ⚠⚠⚠⚠⚠
+
+Some functions may be unsafe, and some functions are only modified based on the GO native bag. Therefore, please pay attention to the use of some functions in actual use. I will mark as much as possible where possible problems may occur.
+
 <h2>如何使用</h2>
 <hr/>
 <h3>String</h3>
