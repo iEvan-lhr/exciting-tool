@@ -31,16 +31,15 @@ exciting-tool 是一个理想化的全能的 Go 的工具包，涉及的内容�
 ```    
 ## 全功能 String  
 
-### 相同的功能
-
-✔以下功能支持使用String，全功能String，[]byte，部分支持rune
-
 使用这段代码来构造全功能String
 
 ```bash
     tools.Make(str)
 ```  
 
+### 相同的入参支持
+
+✔以下方法支持使用String，全功能String，[]byte 作为入参，部分支持rune作为入参
 
 ```plain
 
