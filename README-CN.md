@@ -22,18 +22,18 @@ exciting-tool 是一个理想化的全能的 Go 的工具包，涉及的内容�
 
 ☀ 您可以在低版本中使用Lowversion分支的代码 ☀
 
-某些功能可能不安全，并且某些功能仅在GO本地袋中修改D。因此，请注意实际使用中某些功能的使用。在可能的问题上，我会尽可能地标记。
+某些功能可能不安全，并且某些功能仅在GO原生代码中修改。因此，请注意实际使用中某些功能的使用。在可能的问题上，我会尽可能地标记。
 
 ## 如何使用
 
 ```bash
-   go get https://github.com/iEvan-lhr/exciting-tool
+   go get github.com/iEvan-lhr/exciting-tool
 ```    
 ## 全功能 String
 
 # 相同的功能
 
-✔以下功能支持使用String，全功能String，[]byte
+✔以下功能支持使用String，全功能String，[]byte，部分支持rune
 
 Use the following code to construct a full -featured String
    
