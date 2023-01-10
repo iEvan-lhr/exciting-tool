@@ -29,20 +29,18 @@ exciting-tool 是一个理想化的全能的 Go 的工具包，涉及的内容�
 ```bash
    go get github.com/iEvan-lhr/exciting-tool
 ```    
-## 全功能 String
+## 全功能 String  
 
-# 相同的功能
+### 相同的功能
 
 ✔以下功能支持使用String，全功能String，[]byte，部分支持rune
 
-Use the following code to construct a full -featured String
-   
+使用这段代码来构造全功能String
+
 ```bash
     tools.Make(str)
-```    
-Common Functions
+```  
 
-✔The following functions support the use of String, full -featured String, [] byte as the parameters
 
 ```plain
 
