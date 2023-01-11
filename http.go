@@ -9,31 +9,53 @@ import (
 
 func Do(url string, args ...interface{}) *String {
 	if len(args) <= 0 {
-		return get(url)
+		return get(url, nil)
 	} else {
-		return post(url, args[0].(string))
+		return post(url, args[0].(string), nil)
 	}
 }
+
+func DoUseHeader(url string, header http.Header, args ...interface{}) *String {
+	if len(args) <= 0 {
+		return get(url, header)
+	} else {
+		return post(url, args[0].(string), header)
+	}
+}
+
 func UnMarshal(r *http.Request, v interface{}) interface{} {
 	Unmarshal(ReturnValueByTwo(io.ReadAll(r.Body)), reflect.ValueOf(v).Interface())
 	return v
 }
 
-func get(url string) *String {
+func MarshalReq(r []any, v interface{}) interface{} {
+	Unmarshal(ReturnValueByTwo(io.ReadAll(r[0].(*http.Request).Body)), reflect.ValueOf(v).Interface())
+	return v
+}
+
+func get(url string, header http.Header) *String {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		panic(err)
 	}
-	request.Header = headerPublic()
+	if header == nil {
+		request.Header = headerPublic()
+	} else {
+		request.Header = header
+	}
 	return Make(ReturnValueByTwo(io.ReadAll(ReturnValueByTwo((&http.Client{}).Do(request)).(*http.Response).Body)))
 }
 
-func post(url, body string) *String {
+func post(url, body string, header http.Header) *String {
 	request, err := http.NewRequest("POST", url, strings.NewReader(body))
 	if err != nil {
 		panic(err)
 	}
-	request.Header = headerPublic()
+	if header == nil {
+		request.Header = headerPublic()
+	} else {
+		request.Header = header
+	}
 	return Make(ReturnValueByTwo(io.ReadAll(ReturnValueByTwo((&http.Client{}).Do(request)).(*http.Response).Body)))
 }
 func headerPublic() http.Header {
