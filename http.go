@@ -51,7 +51,7 @@ func UnMarshal(r *http.Request, v interface{}) interface{} {
 }
 
 // MarshalReq 用于从request中解析参数
-func MarshalReq(r []any, v interface{}) interface{} {
+func MarshalReq(r []interface{}, v interface{}) interface{} {
 	Unmarshal(ReturnValueByTwo(io.ReadAll(r[0].(*http.Request).Body)), reflect.ValueOf(v).Interface())
 	return v
 }
