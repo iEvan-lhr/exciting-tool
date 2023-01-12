@@ -4,38 +4,42 @@
 
 [English](./README.md) | [简体中文](./README-CN.md)
 
-Excing-Tool is an ideal omnidirectional GO toolkit. The content involved includes: string processing (stitching, conversion, etc.), the log traversal of the structure (example), the automatic stitching and processing of the native SQL, and the more Convenient Map (under development), JSON parsing, HTTP request sending, and so on.
+exciting-tool 是一个理想化的全能的 Go 的工具包，涉及的内容包括:字符串的处理（拼接、转换等等）、结构体的日志遍历（示例）、原生sql的自动拼接与处理、更方便的map（开发中）、json解析、http请求发送等等。
 
-## Remark information
 
-The author does not guarantee to update the content in time, but will try his best to improve the document to help users use it.
+## 备注信息
 
-Welcome everyone to help me  :heart::heart::heart:
+这是一个完全开源的项目。
 
-## important hint ⚠⚠⚠⚠⚠
+作者并不能保证能及时更新内容，但会尽力去完善文档来帮助使用者来使用。
 
-☠ Need GO version 1.18 or more ☠ 
+也欢迎大家帮助我 :heart::heart::heart:
 
-☀ You can use the code of the Lowversion branch in the low version ☀
+## 重要提示  ⚠⚠⚠⚠⚠
 
-Some functions may be unsafe, and some functions are only modified based on the GO native bag. Therefore, please pay attention to the use of some functions in actual use. I will mark as much as possible where possible problems may occur.
 
-## HOW TO USE
+☠ 需要GO版本1.18或更多 ☠
+
+☀ 您可以在低版本中使用Lowversion分支的代码 ☀
+
+某些功能可能不安全，并且某些功能仅在GO原生代码中修改。因此，请注意实际使用中某些功能的使用。在可能的问题上，我会尽可能地标记。
+
+## 如何使用
 
 ```bash
-   go get https://github.com/iEvan-lhr/exciting-tool
+   go get github.com/iEvan-lhr/exciting-tool
 ```    
+## 全功能 String  
 
-## full-featured String
+使用这段代码来构造全功能String
 
-Use the following code to construct a full -featured String
-   
 ```bash
     tools.Make(str)
-```    
-Common Functions
+```  
 
-✔The following functions support the use of String, full -featured String, [] byte as the parameters
+### 相同的入参支持
+
+✔以下方法支持使用String，全功能String，[]byte 作为入参，部分支持rune作为入参
 
 ```plain
 
