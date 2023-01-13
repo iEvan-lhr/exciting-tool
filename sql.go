@@ -24,3 +24,7 @@ func Check(model any) string {
 	s.checkStruct(model)
 	return s.string()
 }
+
+func Create(model any) {
+
+}

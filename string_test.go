@@ -8,15 +8,16 @@ import (
 )
 
 func TestName(t *testing.T) {
-	u := &User{Id: 23132, Username: "foo", Password: "bar", Identity: "324213", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"}
+	//u := &User{Id: 23132, Username: "foo", Password: "bar", Identity: "324213", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"}
 	//log.Println(Make(u))
 	//var app []User
 	//for i := 0; i < 10000; i++ {
 	//	app = append(app, *u)
 	//}
 	//Send(0, app)
-	log.Println(Make(u))
+	//log.Println(reflect.ValueOf(time.Now()).Interface())
 	//u1:=UserHead(u)
+	log.Println(marshalTable(User{}))
 	//log.Println(UserHead(u))
 	//b := StructToBytes(u)
 	//u.Username = ":::::::"
@@ -43,14 +44,6 @@ type User struct {
 
 //func (u *User) String() string {
 //	return u.Username + ":" + u.Password
-//}
-
-//func (u User) setUsername(username string) {
-//	u.Username = username
-//}
-//
-//func (u User) setPassword(username string) {
-//	u.Password = username
 //}
 
 func StructToBytes(model *User) []byte {

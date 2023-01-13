@@ -16,7 +16,7 @@ func TestError(t *testing.T) {
 	//})
 	a := App{}
 
-	log.Println(UnMarshal(nil, &a))
+	log.Println(MarshalReq(nil, &a))
 }
 
 func Success(str string) string {
