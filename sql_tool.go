@@ -65,7 +65,6 @@ func saveTable(values reflect.Value, types reflect.Type) *String {
 		s.appendAny(",\n")
 	}
 	s.ReplaceLastStr(2, "\n)")
-	//result = append(result, s)
 	return s
 }
 

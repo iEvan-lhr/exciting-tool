@@ -233,7 +233,7 @@ func (s *String) Atoi() (int, error) {
 		// Fast path for small integers that fit int type.
 		s0 := s
 		if s.buf[0] == '-' || s.buf[0] == '+' {
-			s.RemoveIndexStr(1)
+			s.buf = s.buf[1:]
 			if s.Len() < 1 {
 				return 0, &NumError{Strings(fnAtoi), s0, ErrSyntax}
 			}
