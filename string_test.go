@@ -1,29 +1,17 @@
 package tools
 
 import (
-	"log"
 	"reflect"
 	"testing"
 	"unsafe"
 )
 
 func TestName(t *testing.T) {
-	//u := &User{Id: 23132, Username: "foo", Password: "bar", Identity: "324213", QrCode: "982j32", DenKey: "ansssss", TalkingKey: "qwesad"}
-	//log.Println(Make(u))
-	//var app []User
-	//for i := 0; i < 10000; i++ {
-	//	app = append(app, *u)
-	//}
-	//Send(0, app)
-	//log.Println(reflect.ValueOf(time.Now()).Interface())
-	//u1:=UserHead(u)
-	log.Println(marshalTable(User{}))
-	//log.Println(UserHead(u))
-	//b := StructToBytes(u)
-	//u.Username = ":::::::"
-	//n1 := &User{}
-	//n1 = BytesToStruct(b)
-	//log.Println(n1)
+	u := &User{Id: 23132, Username: "foo", Password: "bar", Identity: "324213", QrCodes: nil, DenKey: "ansssss", TalkingKey: "qwesad"}
+	Show(u)
+	//s := Make("")
+	//s.Marshal(u)
+	//log.Println(s)
 }
 
 func Send(i int, data []User) {
@@ -37,7 +25,7 @@ type User struct {
 	Username   string `json:"username"`
 	Password   string `json:"password" marshal:"off"`
 	Identity   string `json:"identity"`
-	QrCode     string `json:"qr_code"`
+	QrCodes    []int  `json:"qr_code"`
 	DenKey     string `json:"den_key"`
 	TalkingKey string `json:"talking_key"`
 }

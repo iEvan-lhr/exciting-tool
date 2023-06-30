@@ -157,9 +157,15 @@ func (s *String) appendAny(join any) int {
 				s.Marshal(join)
 			}
 		case reflect.Slice:
+			ReturnValue(s.WriteByte('['))
 			for i := 0; i < value.Len(); i++ {
 				s.appendAny(value.Index(i).Interface())
+				ReturnValue(s.WriteByte(','))
 			}
+			if value.Len() > 0 {
+				s.RemoveLastStr(1)
+			}
+			ReturnValue(s.WriteByte(']'))
 		}
 	}
 	return -1

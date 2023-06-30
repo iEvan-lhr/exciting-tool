@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"log"
 	"reflect"
 	"time"
 	"unicode/utf8"
@@ -238,6 +239,19 @@ func (s *String) Marshal(model any) {
 		}
 	}
 	s.appendAny(EndMessage)
+}
+
+func Show(show any) {
+	s := &String{}
+	values, types := returnValAndTyp(show)
+	s.cutStructMessage(values.String())
+	for j := 0; j < types.NumField(); j++ {
+		if types.Field(j).Tag.Get("marshal") != "off" {
+			s.Append(types.Field(j).Name, ":", values.Field(j).Interface(), "\n")
+		}
+	}
+	s.appendAny(EndMessage)
+	log.Println(s)
 }
 
 func returnValAndTyp(model any) (values reflect.Value, types reflect.Type) {
