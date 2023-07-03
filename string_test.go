@@ -1,19 +1,38 @@
 package tools
 
 import (
+	"log"
+	"math/rand"
 	"reflect"
 	"testing"
+	"time"
 	"unsafe"
 )
 
 func TestName(t *testing.T) {
-	u := &User{Id: 23132, Username: "foo", Password: "bar", Identity: "324213", QrCodes: nil, DenKey: "ansssss", TalkingKey: "qwesad"}
-	Show(u)
+	//u := &User{Id: 23132, Username: "foo", Password: "bar", Identity: "324213", QrCodes: nil, DenKey: "ansssss", TalkingKey: "qwesad"}
+	////Show(u)
+	//s := Save(u)
+	//log.Println(s)
+	//m := make(map[string]interface{})
+	//Lock()
+	for i := 0; i < 10; i++ {
+		go func(key int) {
+			time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
+			LockFunc("check", func() {
+				log.Println("Checking:", key)
+			})
+		}(i)
+	}
+	time.Sleep(50 * time.Second)
 	//s := Make("")
 	//s.Marshal(u)
 	//log.Println(s)
 }
 
+func findStr(name string) {
+	log.Println("findStr")
+}
 func Send(i int, data []User) {
 	if i < 1000 {
 		Send(i+1, data)
