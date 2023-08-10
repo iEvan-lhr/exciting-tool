@@ -359,3 +359,30 @@ func (s *String) GetAllRune(model string) []string {
 	}
 	return res
 }
+
+// IsNumber 用来检测字符串是否为数字
+func (s *String) IsNumber() bool {
+	_, err := s.Atoi()
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+// FormatterNum 格式化输出字符串
+func (s *String) FormatterNum() string {
+	if !s.IsNumber() {
+		return ""
+	}
+	result := Make()
+	m := 1
+	for _, v := range s.buf {
+		if s.Len() != m && (s.Len()-m)%3 == 0 {
+			result.Append(v, ",")
+		} else {
+			result.appendAny(v)
+		}
+		m++
+	}
+	return result.string()
+}
