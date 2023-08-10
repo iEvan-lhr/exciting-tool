@@ -288,3 +288,36 @@ func MarshalMap(model any) map[string]string {
 	}
 	return modelMap
 }
+
+// Get 此方法用于取出括号中的内容 支持输入字符model需要为2 下标0为左字符 1为右字符
+func (s *String) Get(model string) *String {
+	if len(model) < 2 {
+		return Make()
+	}
+	start := -1
+	for i := 0; i < s.Len(); i++ {
+		if s.buf[i] == model[0] {
+			start = i
+		} else if s.buf[i] == model[1] {
+			return s.GetStrString(start+1, i)
+		}
+	}
+	return Make()
+}
+
+func (s *String) GetAll(model string) []string {
+	if len(model) < 2 {
+		return nil
+	}
+	var res []string
+	start := -1
+	for i := 0; i < s.Len(); i++ {
+		if s.buf[i] == model[0] {
+			start = i
+		} else if s.buf[i] == model[1] {
+			res = append(res, s.GetStr(start+1, i))
+			start = -1
+		}
+	}
+	return res
+}

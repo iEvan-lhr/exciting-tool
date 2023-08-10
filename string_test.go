@@ -64,3 +64,8 @@ func StructToBytes(model *User) []byte {
 func BytesToStruct(data []byte) *User {
 	return (*User)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&data)).Data))
 }
+
+func TestStr(t *testing.T) {
+	s := Make("asdhjw(xxxx)")
+	log.Println(s.Get("()"))
+}
