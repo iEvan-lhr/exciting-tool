@@ -66,6 +66,6 @@ func BytesToStruct(data []byte) *User {
 }
 
 func TestStr(t *testing.T) {
-	s := Make("asdhjw(xxxx)")
-	log.Println(s.Get("()"))
+	s := Make("（林婕琼）")
+	log.Println(s.GetRune("林琼"))
 }

@@ -377,6 +377,11 @@ func (s *String) GetStrString(index, end int) *String {
 	return &String{buf: s.buf[index:end]}
 }
 
+// GetStrStringByRune 获取字符串的某个片段 返回String结构
+func (s *String) GetStrStringByRune(index, end int) *String {
+	return &String{buf: runesToBytes(s.runes[index:end])}
+}
+
 // RemoveIndexStr 移除头部固定长度的字符
 func (s *String) RemoveIndexStr(lens int) {
 	if lens > s.Len() {
