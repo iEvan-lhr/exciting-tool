@@ -2,10 +2,8 @@ package tools
 
 import (
 	"log"
-	"math/rand"
 	"reflect"
 	"testing"
-	"time"
 	"unsafe"
 )
 
@@ -16,15 +14,17 @@ func TestName(t *testing.T) {
 	//log.Println(s)
 	//m := make(map[string]interface{})
 	//Lock()
-	for i := 0; i < 10; i++ {
-		go func(key int) {
-			time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
-			LockFunc("check", func() {
-				log.Println("Checking:", key)
-			})
-		}(i)
-	}
-	time.Sleep(50 * time.Second)
+	//for i := 0; i < 10; i++ {
+	//	go func(key int) {
+	//		time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
+	//		LockFunc("check", func() {
+	//			log.Println("Checking:", key)
+	//		})
+	//	}(i)
+	//}
+	//time.Sleep(50 * time.Second)
+	log.Println(Make("insert userinfo values(").AppendSpiltLR(",", "'", "'", 4, 5, 6, 7, 8, 9, 10).Append(")"))
+
 	//s := Make("")
 	//s.Marshal(u)
 	//log.Println(s)

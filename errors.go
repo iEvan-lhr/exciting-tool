@@ -18,6 +18,10 @@ func ReturnValue(v ...interface{}) interface{} {
 	return v[0]
 }
 
+func NaNValue(v ...interface{}) interface{} {
+	return v[len(v)-1]
+}
+
 func ReturnValueByTwo(v ...interface{}) interface{} {
 	if v[len(v)-1] != nil {
 		panic(v[len(v)-1])

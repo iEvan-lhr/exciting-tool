@@ -168,6 +168,9 @@ func (s *String) cutHumpMessage(hump string) {
 }
 
 // AppendSpilt  拼接字符串后返回String
+// use AppendSpiltLR(",",24,23,22,21,11)
+// get "24,23,22,21,11"
+// or AppendSpiltLR(",",[]any...])
 func (s *String) AppendSpilt(join ...any) *String {
 	var split = &String{}
 	for i := range join {
@@ -185,6 +188,11 @@ func (s *String) AppendSpilt(join ...any) *String {
 }
 
 // AppendSpiltLR  拼接字符串后返回String
+// use AppendSpiltLR(",","[","]",24,23,22,21,11)
+// get "[24,23,22,21,11]"
+// or AppendSpiltLR(",","[","]",[]any...])
+// use Make("insert userinfo values(").AppendSpiltLR(",", "'", "'", 4, 5, 6, 7, 8, 9, 10).Append(")")
+// get insert userinfo values('4','5','6','7','8','9','10')
 func (s *String) AppendSpiltLR(join ...any) *String {
 	var split, l, r = &String{}, &String{}, &String{}
 	if len(join) < 3 {
@@ -290,7 +298,7 @@ func MarshalMap(model any) map[string]string {
 	return modelMap
 }
 
-// Get 此方法用于取出括号中的内容 支持输入字符model需要为2 下标0为左字符 1为右字符
+// Get 此方法用于取出括号中的内容 支持输入字符model需要为2 下标0为左字符 1为右字符 仅取出第一个匹配的结果
 func (s *String) Get(model string) *String {
 	if len(model) < 2 {
 		return Make()
@@ -306,7 +314,7 @@ func (s *String) Get(model string) *String {
 	return Make()
 }
 
-// GetRune 此方法用于取出括号中的内容 支持输入字符model需要为2 下标0为左字符 1为右字符
+// GetRune 中文支持 此方法用于取出括号中的内容 支持输入字符model需要为2 下标0为左字符 1为右字符 仅取出第一个匹配的结果
 func (s *String) GetRune(model string) *String {
 	if len(model) < 2 {
 		return Make()
@@ -324,6 +332,7 @@ func (s *String) GetRune(model string) *String {
 	return Make()
 }
 
+// GetAll 此方法用于取出括号中的内容 支持输入字符model需要为2 下标0为左字符 1为右字符 取出所有匹配的结果
 func (s *String) GetAll(model string) []string {
 	if len(model) < 2 {
 		return nil
@@ -341,6 +350,7 @@ func (s *String) GetAll(model string) []string {
 	return res
 }
 
+// GetAllRune 此方法用于取出括号中的内容 支持输入字符model需要为2 下标0为左字符 1为右字符 取出所有匹配的结果
 func (s *String) GetAllRune(model string) []string {
 	if len(model) < 2 {
 		return nil
