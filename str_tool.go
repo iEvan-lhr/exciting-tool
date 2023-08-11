@@ -370,9 +370,9 @@ func (s *String) IsNumber() bool {
 }
 
 // FormatterNum 格式化输出字符串
-func (s *String) FormatterNum() string {
+func (s *String) FormatterNum() (bool, string) {
 	if !s.IsNumber() {
-		return ""
+		return false, s.string()
 	}
 	result := Make()
 	m := 1
@@ -384,5 +384,5 @@ func (s *String) FormatterNum() string {
 		}
 		m++
 	}
-	return result.string()
+	return true, result.string()
 }
