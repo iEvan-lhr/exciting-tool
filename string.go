@@ -362,26 +362,6 @@ func (s *String) RemoveLastStrByRune(lens int) {
 	s.buf = runesToBytes(runes[:len(runes)-lens])
 }
 
-// GetByte 获取字符串的单个字符值
-func (s *String) GetByte(index int) byte {
-	return s.buf[index]
-}
-
-// GetStr 获取字符串的某个片段 返回String
-func (s *String) GetStr(index, end int) string {
-	return string(s.buf[index:end])
-}
-
-// GetStrString 获取字符串的某个片段 返回String结构
-func (s *String) GetStrString(index, end int) *String {
-	return &String{buf: s.buf[index:end]}
-}
-
-// GetStrStringByRune 获取字符串的某个片段 返回String结构
-func (s *String) GetStrStringByRune(index, end int) *String {
-	return &String{buf: runesToBytes(s.runes[index:end])}
-}
-
 // RemoveIndexStr 移除头部固定长度的字符
 func (s *String) RemoveIndexStr(lens int) {
 	if lens > s.Len() {

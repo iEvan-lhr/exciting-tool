@@ -1,7 +1,6 @@
 package tools
 
 import (
-	"bytes"
 	"log"
 	"reflect"
 	"unicode/utf8"
@@ -286,78 +285,6 @@ func MarshalMap(model any) map[string]string {
 		}
 	}
 	return modelMap
-}
-
-// Get 此方法用于取出括号中的内容 支持输入字符model需要为2 下标0为左字符 1为右字符 仅取出第一个匹配的结果
-func (s *String) Get(model string) *String {
-	if len(model) < 2 {
-		return Make()
-	}
-	start := -1
-	for i := 0; i < s.Len(); i++ {
-		if s.buf[i] == model[0] {
-			start = i
-		} else if s.buf[i] == model[1] {
-			return s.GetStrString(start+1, i)
-		}
-	}
-	return Make()
-}
-
-// GetRune 中文支持 此方法用于取出括号中的内容 支持输入字符model需要为2 下标0为左字符 1为右字符 仅取出第一个匹配的结果
-func (s *String) GetRune(model string) *String {
-	if len(model) < 2 {
-		return Make()
-	}
-	s.runes = bytes.Runes(s.buf)
-	mRune := bytes.Runes([]byte(model))
-	start := -1
-	for i := 0; i < s.Len(); i++ {
-		if s.runes[i] == mRune[0] {
-			start = i
-		} else if s.runes[i] == mRune[1] {
-			return s.GetStrStringByRune(start+1, i)
-		}
-	}
-	return Make()
-}
-
-// GetAll 此方法用于取出括号中的内容 支持输入字符model需要为2 下标0为左字符 1为右字符 取出所有匹配的结果
-func (s *String) GetAll(model string) []string {
-	if len(model) < 2 {
-		return nil
-	}
-	var res []string
-	start := -1
-	for i := 0; i < s.Len(); i++ {
-		if s.buf[i] == model[0] {
-			start = i
-		} else if s.buf[i] == model[1] {
-			res = append(res, s.GetStr(start+1, i))
-			start = -1
-		}
-	}
-	return res
-}
-
-// GetAllRune 此方法用于取出括号中的内容 支持输入字符model需要为2 下标0为左字符 1为右字符 取出所有匹配的结果
-func (s *String) GetAllRune(model string) []string {
-	if len(model) < 2 {
-		return nil
-	}
-	var res []string
-	s.runes = bytes.Runes(s.buf)
-	mRune := bytes.Runes([]byte(model))
-	start := -1
-	for i := 0; i < s.Len(); i++ {
-		if s.runes[i] == mRune[0] {
-			start = i
-		} else if s.runes[i] == mRune[1] {
-			res = append(res, s.GetStrStringByRune(start+1, i).String())
-			start = -1
-		}
-	}
-	return res
 }
 
 // IsNumber 用来检测字符串是否为数字

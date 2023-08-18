@@ -66,9 +66,21 @@ func BytesToStruct(data []byte) *User {
 }
 
 func TestStr(t *testing.T) {
-	s := Make("（林婕琼）")
-	log.Println(Make("12345").FormatterNum())
-	log.Println(s.GetRune("林琼"))
+	//s := Make("（林婕琼）")
+	//log.Println(Make("12345").FormatterNum())
+	//log.Println(s.GetRune("林琼"))
+	s := Make("</w:r><w:r w:rsidR=\"008C5277\">\n<w:rPr>\n<w:rFonts w:ascii=\"Century Gothic\" w:eastAsia=\"宋体\" w:hAnsi=\"Century Gothic\" w:cs=\"Times New Roman\" w:hint=\"eastAsia\"/>\n<w:sz w:val=\"18\"/>\n<w:szCs w:val=\"18\"/>\n<w:lang w:eastAsia=\"zh-CN\"/>\n</w:rPr>\n<w:t>(</w:t>\n</w:r>\n\n<w:r w:rsidR=\"008C5277\">\n<w:rPr>\n<w:rFonts w:ascii=\"Century Gothic\" w:eastAsia=\"宋体\" w:hAnsi=\"Century Gothic\" w:cs=\"Times New Roman\"/>\n<w:sz w:val=\"18\"/>\n<w:szCs w:val=\"18\"/>\n<w:lang w:eastAsia=\"zh-CN\"/>\n</w:rPr>\n<w:t>+NMB%)</w:t>\n</w:r>")
+	content, other := s.GetContentAll("<w:t>", "</w:t>")
+	content[0] = "(+++"
+	ans := Make()
+	for i := range other {
+		ans.appendAny(other[i])
+		if i < len(content) {
+			ans.appendAny(content[i])
+		}
+	}
+	str := ans.string()
+	log.Println(str)
 }
 
 func TestTime(t *testing.T) {
