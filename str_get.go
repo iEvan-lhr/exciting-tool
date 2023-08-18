@@ -113,14 +113,14 @@ func (s *String) GetContent(label ...string) (content string) {
 // GetContentAll 此方法用于取出固定字符串中的内容,例如<a>mess</a>,注意 仅仅取出第一个匹配项，若要取出所有，请使用GetContentAll
 // GetContentAll("<a>","</a>")
 func (s *String) GetContentAll(label ...string) (content, other []string, steps map[int]struct {
-	model int
-	index int
+	Model int
+	Index int
 }) {
 	temp := Make(s)
 	var tempOther string
 	steps = make(map[int]struct {
-		model int
-		index int
+		Model int
+		Index int
 	}, 0)
 	ste := 0
 	for {
@@ -132,15 +132,15 @@ func (s *String) GetContentAll(label ...string) (content, other []string, steps 
 			} else {
 				content = append(content, temp.GetStr(i+len(label[0]), j))
 				steps[ste] = struct {
-					model int
-					index int
-				}{model: 0, index: len(content) - 1}
+					Model int
+					Index int
+				}{Model: 0, Index: len(content) - 1}
 				ste++
 				other = append(other, tempOther+temp.GetStr(0, i+len(label[0])))
 				steps[ste] = struct {
-					model int
-					index int
-				}{model: 1, index: len(other) - 1}
+					Model int
+					Index int
+				}{Model: 1, Index: len(other) - 1}
 				ste++
 				temp.RemoveIndexStr(j + len(label[1]))
 				tempOther = label[1]
@@ -148,9 +148,9 @@ func (s *String) GetContentAll(label ...string) (content, other []string, steps 
 		} else {
 			other = append(other, tempOther+temp.string())
 			steps[ste] = struct {
-				model int
-				index int
-			}{model: 1, index: len(other) - 1}
+				Model int
+				Index int
+			}{Model: 1, Index: len(other) - 1}
 			ste++
 			break
 		}
