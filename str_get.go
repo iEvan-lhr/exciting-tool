@@ -112,9 +112,17 @@ func (s *String) GetContent(label ...string) (content string) {
 
 // GetContentAll 此方法用于取出固定字符串中的内容,例如<a>mess</a>,注意 仅仅取出第一个匹配项，若要取出所有，请使用GetContentAll
 // GetContentAll("<a>","</a>")
-func (s *String) GetContentAll(label ...string) (content, other []string) {
+func (s *String) GetContentAll(label ...string) (content, other []string, steps map[int]struct {
+	model int
+	index int
+}) {
 	temp := Make(s)
 	var tempOther string
+	steps = make(map[int]struct {
+		model int
+		index int
+	}, 0)
+	ste := 0
 	for {
 		if i, j := bytes.Index(temp.buf, []byte(label[0])), bytes.Index(temp.buf, []byte(label[1])); i != -1 && j != -1 {
 			if j < i {
@@ -123,12 +131,27 @@ func (s *String) GetContentAll(label ...string) (content, other []string) {
 				tempOther = label[1]
 			} else {
 				content = append(content, temp.GetStr(i+len(label[0]), j))
+				steps[ste] = struct {
+					model int
+					index int
+				}{model: 0, index: len(content) - 1}
+				ste++
 				other = append(other, tempOther+temp.GetStr(0, i+len(label[0])))
+				steps[ste] = struct {
+					model int
+					index int
+				}{model: 1, index: len(other) - 1}
+				ste++
 				temp.RemoveIndexStr(j + len(label[1]))
 				tempOther = label[1]
 			}
 		} else {
 			other = append(other, tempOther+temp.string())
+			steps[ste] = struct {
+				model int
+				index int
+			}{model: 1, index: len(other) - 1}
+			ste++
 			break
 		}
 	}
