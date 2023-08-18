@@ -4,24 +4,14 @@ import (
 	"bytes"
 	"log"
 	"reflect"
-	"time"
 	"unicode/utf8"
 )
 
-const timeLayout = "2006-01-02 15:04:05"
 const EndMessage = "----------END----------"
 const Select = "select * from "
 
 func inTF(i, j int) bool {
 	return i == j
-}
-
-func (s *String) strTime(t time.Time) {
-	const bufSize = 64
-	var b []byte
-	var buf [bufSize]byte
-	b = buf[:0]
-	s.appendAny(t.AppendFormat(b, timeLayout))
 }
 
 func marshalStruct(model any) (result []*String) {

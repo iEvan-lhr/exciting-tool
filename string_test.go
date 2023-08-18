@@ -70,3 +70,9 @@ func TestStr(t *testing.T) {
 	log.Println(Make("12345").FormatterNum())
 	log.Println(s.GetRune("林琼"))
 }
+
+func TestTime(t *testing.T) {
+	s := Make("09-01-23")
+	log.Println(s.UpdateLayout("01-02-06", "2006/01/02"))
+	//log.Println(s.GetRune("林琼"))
+}
