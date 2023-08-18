@@ -97,10 +97,17 @@ func (s *String) GetAllRune(model string) []string {
 // GetContent 此方法用于取出固定字符串中的内容,例如<a>mess</a>,注意 仅仅取出第一个匹配项，若要取出所有，请使用GetContentAll
 // GetContent("<a>","</a>")
 func (s *String) GetContent(label ...string) (content string) {
-	if i, j := bytes.Index(s.buf, []byte(label[0])), bytes.Index(s.buf, []byte(label[1])); i != -1 && j != -1 && i < j {
-		content = s.GetStr(i+len(label[0]), j)
+	temp := Make(s)
+	for {
+		if i, j := bytes.Index(temp.buf, []byte(label[0])), bytes.Index(temp.buf, []byte(label[1])); i != -1 && j != -1 {
+			if i < j {
+				content = s.GetStr(i+len(label[0]), j)
+				return
+			} else {
+				temp.RemoveIndexStr(j + len(label[1]))
+			}
+		}
 	}
-	return
 }
 
 // GetContentAll 此方法用于取出固定字符串中的内容,例如<a>mess</a>,注意 仅仅取出第一个匹配项，若要取出所有，请使用GetContentAll
@@ -109,11 +116,17 @@ func (s *String) GetContentAll(label ...string) (content, other []string) {
 	temp := Make(s)
 	var tempOther string
 	for {
-		if i, j := bytes.Index(temp.buf, []byte(label[0])), bytes.Index(temp.buf, []byte(label[1])); i != -1 && j != -1 && i < j {
-			content = append(content, temp.GetStr(i+len(label[0]), j))
-			other = append(other, tempOther+temp.GetStr(0, i+len(label[0])))
-			temp.RemoveIndexStr(j + len(label[1]))
-			tempOther = label[1]
+		if i, j := bytes.Index(temp.buf, []byte(label[0])), bytes.Index(temp.buf, []byte(label[1])); i != -1 && j != -1 {
+			if j < i {
+				other[len(other)-1] = other[len(other)-1] + temp.GetStr(0, j+len(label[1]))
+				temp.RemoveIndexStr(j + len(label[1]))
+				tempOther = label[1]
+			} else {
+				content = append(content, temp.GetStr(i+len(label[0]), j))
+				other = append(other, tempOther+temp.GetStr(0, i+len(label[0])))
+				temp.RemoveIndexStr(j + len(label[1]))
+				tempOther = label[1]
+			}
 		} else {
 			other = append(other, tempOther+temp.string())
 			break
