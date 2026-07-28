@@ -1,96 +1,149 @@
 package tools
 
 import (
+	"bytes"
 	"io"
 	"net/http"
-	"reflect"
 	"strings"
+	"time"
+
+	"github.com/iEvan-lhr/exciting-tool/httpx"
 )
 
-// Do 用于执行标准的请求方法,默认设置的header如下
-// header.Set("Accept", "*/*")
-// header.Set("Accept-Language", "zh-CN,zh;q=0.9")
-// header.Set("Connection", "keep-alive")
-// header.Set("Content-Type", "application/json")
-// header.Set("User-Agent", "PostmanRuntime/7.28.4")
+var defaultHTTPClient = &http.Client{Timeout: 30 * time.Second}
+
+// NewHTTPClient creates the preferred error-returning HTTP client.
+func NewHTTPClient(options ...httpx.Option) *httpx.Client {
+	return httpx.New(options...)
+}
+
+// Do executes a GET request when body is omitted, otherwise a POST request.
+// Deprecated: Use httpx.Client or NewHTTPClient.
 func Do(url string, args ...interface{}) *String {
-	if len(args) <= 0 {
+	if len(args) == 0 {
 		return get(url, nil)
-	} else {
-		return post(url, args[0].(string), nil)
 	}
+	return post(url, Make(args[0]).String(), nil)
 }
 
-// DoReq 用于执行需要自定义client的请求方法，例如使用https 可以设置信任证书等等 入参可选传入client 传入多个将拼接多次的执行结果
-func DoReq(r *http.Request, client ...*http.Client) *String {
-	if len(client) > 0 {
-		result := Make()
-		for i := range client {
-			result.appendAny(ReturnValueByTwo(io.ReadAll(ReturnValueByTwo(client[i].Do(r)).(*http.Response).Body)))
+// DoReq executes a request with one or more clients and concatenates responses.
+// Deprecated: Use httpx.Client.Do.
+func DoReq(r *http.Request, clients ...*http.Client) *String {
+	if r == nil {
+		return Make()
+	}
+	if len(clients) == 0 {
+		return executeRequest(defaultHTTPClient, r)
+	}
+
+	body, err := requestBody(r)
+	ExecError(err)
+	result := Make()
+	for _, client := range clients {
+		if client == nil {
+			client = defaultHTTPClient
 		}
-		return result
+		request := r.Clone(r.Context())
+		if body != nil {
+			request.Body = io.NopCloser(bytes.NewReader(body))
+			request.ContentLength = int64(len(body))
+		}
+		result.Append(executeRequest(client, request))
 	}
-	return Make(ReturnValueByTwo(io.ReadAll(ReturnValueByTwo((&http.Client{}).Do(r)).(*http.Response).Body)))
+	return result
 }
 
-// DoUseHeader 用于执行自定义header的请求方法 入参为请求地址、header、body及其他参数
-// 允许header为nil 将会使用默认的header
+// DoUseHeader executes a GET or POST request with custom headers.
+// Deprecated: Use httpx.Client.Do.
 func DoUseHeader(url string, header http.Header, args ...interface{}) *String {
-	if len(args) <= 0 {
+	if len(args) == 0 {
 		return get(url, header)
-	} else {
-		return post(url, args[0].(string), header)
 	}
+	return post(url, Make(args[0]).String(), header)
 }
 
-// UnMarshal 用于从request中解析参数
-// Deprecated: 若使用iEvan-lhr/worker 构建request , 推荐使用 MarshalReq.
+// UnMarshal parses a request body into v.
+// Deprecated: If iEvan-lhr/worker constructs the request, use MarshalReq.
 func UnMarshal(r *http.Request, v interface{}) interface{} {
-	Unmarshal(ReturnValueByTwo(io.ReadAll(r.Body)), reflect.ValueOf(v).Interface())
+	if r == nil || r.Body == nil || v == nil {
+		return v
+	}
+	data, err := io.ReadAll(r.Body)
+	ExecError(err)
+	Unmarshal(data, v)
 	return v
 }
 
-// MarshalReq 用于从request中解析参数
+// MarshalReq parses the first request in r into v.
 func MarshalReq(r []any, v interface{}) interface{} {
-	Unmarshal(ReturnValueByTwo(io.ReadAll(r[0].(*http.Request).Body)), reflect.ValueOf(v).Interface())
-	return v
+	if len(r) == 0 || v == nil {
+		return v
+	}
+	request, ok := r[0].(*http.Request)
+	if !ok {
+		return v
+	}
+	return UnMarshal(request, v)
 }
 
-// get 底层方法 用于发送get请求
 func get(url string, header http.Header) *String {
-	request, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		panic(err)
-	}
-	if header == nil {
-		request.Header = headerPublic()
-	} else {
-		request.Header = header
-	}
-	return Make(ReturnValueByTwo(io.ReadAll(ReturnValueByTwo((&http.Client{}).Do(request)).(*http.Response).Body)))
+	request, err := http.NewRequest(http.MethodGet, url, nil)
+	ExecError(err)
+	setRequestHeader(request, header)
+	return executeRequest(defaultHTTPClient, request)
 }
 
-// post 底层方法 用于发送post请求
 func post(url, body string, header http.Header) *String {
-	request, err := http.NewRequest("POST", url, strings.NewReader(body))
-	if err != nil {
-		panic(err)
-	}
-	if header == nil {
-		request.Header = headerPublic()
-	} else {
-		request.Header = header
-	}
-	return Make(ReturnValueByTwo(io.ReadAll(ReturnValueByTwo((&http.Client{}).Do(request)).(*http.Response).Body)))
+	request, err := http.NewRequest(http.MethodPost, url, strings.NewReader(body))
+	ExecError(err)
+	setRequestHeader(request, header)
+	return executeRequest(defaultHTTPClient, request)
 }
 
-// headerPublic 设置标准请求头
+func executeRequest(client *http.Client, request *http.Request) *String {
+	response, err := client.Do(request)
+	ExecError(err)
+	defer response.Body.Close()
+
+	data, err := io.ReadAll(response.Body)
+	ExecError(err)
+	return BytesString(data)
+}
+
+func requestBody(request *http.Request) ([]byte, error) {
+	if request.Body == nil {
+		return nil, nil
+	}
+	if request.GetBody != nil {
+		body, err := request.GetBody()
+		if err != nil {
+			return nil, err
+		}
+		defer body.Close()
+		return io.ReadAll(body)
+	}
+
+	data, err := io.ReadAll(request.Body)
+	if closeErr := request.Body.Close(); err == nil {
+		err = closeErr
+	}
+	request.Body = io.NopCloser(bytes.NewReader(data))
+	return data, err
+}
+
+func setRequestHeader(request *http.Request, header http.Header) {
+	if header == nil {
+		request.Header = headerPublic()
+		return
+	}
+	request.Header = header.Clone()
+}
+
 func headerPublic() http.Header {
 	header := http.Header{}
 	header.Set("Accept", "*/*")
 	header.Set("Accept-Language", "zh-CN,zh;q=0.9")
-	header.Set("Connection", "keep-alive")
 	header.Set("Content-Type", "application/json")
-	header.Set("User-Agent", "PostmanRuntime/7.28.4")
+	header.Set("User-Agent", "exciting-tool")
 	return header
 }

@@ -15,6 +15,9 @@ func inTF(i, j int) bool {
 
 func marshalStruct(model any) (result []*String) {
 	values, typ := returnValAndTyp(model)
+	if !values.IsValid() || typ == nil {
+		return nil
+	}
 	switch values.Kind() {
 	case reflect.Struct:
 		return generateModel(values, typ)
@@ -26,10 +29,13 @@ func marshalStruct(model any) (result []*String) {
 
 func generateModel(values reflect.Value, types reflect.Type) (result []*String) {
 	s := Make("insert into ")
-	s.cutHumpMessage(values.String())
+	s.Append(humpName(types.Name()))
 	tags := Make(" (")
 	vars := Make(" values(")
 	for j := 0; j < types.NumField(); j++ {
+		if types.Field(j).PkgPath != "" {
+			continue
+		}
 		switch types.Field(j).Tag.Get("marshal") {
 		case "off":
 		case "auto_insert":
@@ -62,6 +68,9 @@ func generateModels(values reflect.Value) (result []*String) {
 		}
 		vars := Make("(")
 		for j := 0; j < lens; j++ {
+			if t.Field(j).PkgPath != "" {
+				continue
+			}
 			switch t.Field(j).Tag.Get("marshal") {
 			case "off":
 			case "auto_insert":
@@ -79,11 +88,14 @@ func generateModels(values reflect.Value) (result []*String) {
 }
 
 func generateHead(model any) (*String, int) {
-	values, typ := returnValAndTyp(model)
+	_, typ := returnValAndTyp(model)
 	s := Make("insert into ")
-	s.cutHumpMessage(values.String())
+	s.Append(humpName(typ.Name()))
 	tags := Make(" (")
 	for j := 0; j < typ.NumField(); j++ {
+		if typ.Field(j).PkgPath != "" {
+			continue
+		}
 		switch typ.Field(j).Tag.Get("marshal") {
 		case "off":
 		case "auto_insert":
@@ -99,44 +111,52 @@ func generateHead(model any) (*String, int) {
 
 func (s *String) queryStruct(model any) {
 	values, typ := returnValAndTyp(model)
+	if !values.IsValid() || typ == nil {
+		return
+	}
 	s.appendAny(Select)
-	s.cutHumpMessage(values.String())
+	s.Append(humpName(typ.Name()))
 	var where byte
 	for j := 0; j < typ.NumField(); j++ {
-		if !values.Field(j).IsZero() {
+		field := typ.Field(j)
+		value := values.Field(j)
+		if field.PkgPath != "" || field.Tag.Get("marshal") == "off" || value.Kind() == reflect.Slice {
+			continue
+		}
+		if !value.IsZero() {
 			if where == 0 {
 				s.appendAny(" where ")
 				where++
 			} else {
 				s.appendAny(" and ")
 			}
-			switch values.Field(j).Kind() {
-			case reflect.Slice:
-			default:
-				s.Append(humpName(typ.Field(j).Name), "=", "'", righteousCharacter(Make(values.Field(j).Interface())), "'")
-			}
+			s.Append("`", humpName(field.Name), "`='", righteousCharacter(Make(value.Interface())), "'")
 		}
 	}
 }
 
 func (s *String) checkStruct(model any) {
 	values, typ := returnValAndTyp(model)
+	if !values.IsValid() || typ == nil {
+		return
+	}
 	s.appendAny(Select)
-	s.cutHumpMessage(values.String())
+	s.Append(humpName(typ.Name()))
 	var where byte
 	for j := 0; j < typ.NumField(); j++ {
-		if !values.Field(j).IsZero() && typ.Field(j).Tag.Get("marshal") == "check" {
+		field := typ.Field(j)
+		value := values.Field(j)
+		if field.PkgPath != "" || value.Kind() == reflect.Slice {
+			continue
+		}
+		if !value.IsZero() && field.Tag.Get("marshal") == "check" {
 			if where == 0 {
 				s.appendAny(" where ")
 				where++
 			} else {
 				s.appendAny(" and ")
 			}
-			switch values.Field(j).Kind() {
-			case reflect.Slice:
-			default:
-				s.Append(humpName(typ.Field(j).Name), "=", "'", righteousCharacter(Make(values.Field(j).Interface())), "'")
-			}
+			s.Append("`", humpName(field.Name), "`='", righteousCharacter(Make(value.Interface())), "'")
 		}
 	}
 }
@@ -253,11 +273,17 @@ func Show(show any) {
 }
 
 func returnValAndTyp(model any) (values reflect.Value, types reflect.Type) {
+	if model == nil {
+		return
+	}
 	switch reflect.ValueOf(model).Kind() {
 	case reflect.Struct, reflect.Slice:
 		values = reflect.ValueOf(model)
 		types = reflect.TypeOf(model)
 	case reflect.Pointer:
+		if reflect.ValueOf(model).IsNil() {
+			return
+		}
 		values = reflect.ValueOf(model).Elem()
 		types = reflect.TypeOf(model).Elem()
 	case reflect.Map:
@@ -270,17 +296,26 @@ func MarshalMap(model any) map[string]string {
 	modelMap := make(map[string]string)
 	var values reflect.Value
 	var types reflect.Type
+	if model == nil {
+		return modelMap
+	}
 	switch reflect.ValueOf(model).Kind() {
 	case reflect.Struct:
 		values = reflect.ValueOf(model)
 		types = reflect.TypeOf(model)
 	case reflect.Pointer:
+		if reflect.ValueOf(model).IsNil() {
+			return modelMap
+		}
 		values = reflect.ValueOf(model).Elem()
 		types = reflect.TypeOf(model).Elem()
 	}
-	modelMap["StructName"] = cutStructMessage(values.String())
+	if !values.IsValid() || types == nil {
+		return modelMap
+	}
+	modelMap["StructName"] = types.Name()
 	for j := 0; j < types.NumField(); j++ {
-		if types.Field(j).Tag.Get("marshal") != "off" {
+		if types.Field(j).PkgPath == "" && types.Field(j).Tag.Get("marshal") != "off" {
 			modelMap[types.Field(j).Name] = Make(values.Field(j).Interface()).string()
 		}
 	}

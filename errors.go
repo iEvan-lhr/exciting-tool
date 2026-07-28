@@ -12,6 +12,9 @@ type ParseError struct {
 }
 
 func ReturnValue(v ...interface{}) interface{} {
+	if len(v) == 0 {
+		return nil
+	}
 	if v[len(v)-1] != nil {
 		log.Println(v[len(v)-1])
 	}
@@ -19,10 +22,16 @@ func ReturnValue(v ...interface{}) interface{} {
 }
 
 func NaNValue(v ...interface{}) interface{} {
+	if len(v) == 0 {
+		return nil
+	}
 	return v[len(v)-1]
 }
 
 func ReturnValueByTwo(v ...interface{}) interface{} {
+	if len(v) == 0 {
+		return nil
+	}
 	if v[len(v)-1] != nil {
 		panic(v[len(v)-1])
 	}
@@ -42,7 +51,7 @@ func ExecGoFunc(exec interface{}, args ...interface{}) {
 	go func() {
 		defer func() {
 			if e := recover(); e != nil {
-				panic(e)
+				log.Printf("ExecGoFunc panic: %v", e)
 			}
 		}()
 		var values []reflect.Value
@@ -81,7 +90,7 @@ func LogError(err error) {
 }
 
 func eatError(err error) {
-
+	LogError(err)
 }
 
 func DeferError(err error, exec interface{}, args ...interface{}) {
@@ -99,7 +108,11 @@ func DeferError(err error, exec interface{}, args ...interface{}) {
 
 func ReturnError(err error, succ func(...interface{}) *ParseError, fail func(...interface{}) *ParseError, args ...interface{}) (vars *ParseError) {
 	if err != nil {
-		return fail(args...)
+		vars = fail(args...)
+		if vars != nil {
+			vars.err = err
+		}
+		return vars
 	}
 	return succ(args...)
 }

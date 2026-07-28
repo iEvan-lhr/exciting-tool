@@ -1,69 +1,81 @@
 package tools
 
 import (
-	"log"
+	"sync"
 	"time"
 )
 
 type LockA struct {
 	unix time.Time
 	Name string `json:"name"`
+
+	entry    *namedLockEntry
+	released *sync.Once
 }
 
-var lockMission map[string]chan struct{}
-var lockFunc map[string]chan func()
+type namedLockEntry struct {
+	mutex sync.Mutex
+	refs  int
+}
 
-func Lock(l any) LockA {
-	switch l.(type) {
+var namedLockRegistry = struct {
+	sync.Mutex
+	entries map[string]*namedLockEntry
+}{
+	entries: make(map[string]*namedLockEntry),
+}
+
+// Lock acquires a mutex identified by a string. Call Unlock on the returned
+// value when the protected operation is complete.
+func Lock(value any) LockA {
+	switch lock := value.(type) {
 	case string:
-		do(l.(string))
-		return LockA{unix: time.Now(), Name: l.(string)}
+		namedLockRegistry.Lock()
+		entry := namedLockRegistry.entries[lock]
+		if entry == nil {
+			entry = &namedLockEntry{}
+			namedLockRegistry.entries[lock] = entry
+		}
+		entry.refs++
+		namedLockRegistry.Unlock()
+
+		entry.mutex.Lock()
+		return LockA{
+			unix:     time.Now(),
+			Name:     lock,
+			entry:    entry,
+			released: &sync.Once{},
+		}
 	case func():
-		log.Println("Lock Func")
-	case func(lock LockA):
-		log.Println("Lock Func")
-	case struct{}:
-		log.Println("Lock Struct")
+		lock()
+	case func(LockA):
+		lock(LockA{unix: time.Now()})
 	}
 	return LockA{}
 }
 
-func do(name string) {
-	if lockMission == nil || len(lockMission) == 0 {
-		lockMission = make(map[string]chan struct{})
+// Unlock releases a named lock. Repeated calls are safe.
+func (l LockA) Unlock() {
+	if l.entry == nil || l.released == nil {
+		return
 	}
-	if _, ok := lockMission[name]; !ok {
-		lockMission[name] = make(chan struct{}, 3)
-		go func() {
-			for {
-				_, ok := <-lockMission[name]
-				if !ok {
-					delete(lockMission, name)
-				} else {
-					log.Println("check")
-				}
-			}
-		}()
-	}
-	lockMission[name] <- struct{}{}
+	l.released.Do(func() {
+		l.entry.mutex.Unlock()
+		namedLockRegistry.Lock()
+		l.entry.refs--
+		if l.entry.refs == 0 {
+			delete(namedLockRegistry.entries, l.Name)
+		}
+		namedLockRegistry.Unlock()
+	})
 }
 
+// LockFunc executes f while holding the named lock.
 func LockFunc(name string, f func()) {
-	if lockFunc == nil || len(lockFunc) == 0 {
-		lockFunc = make(map[string]chan func())
+	if f == nil {
+		return
 	}
-	if _, ok := lockFunc[name]; !ok {
-		lockFunc[name] = make(chan func(), 3)
-		go func() {
-			for {
-				v, ok := <-lockFunc[name]
-				if !ok {
-					delete(lockFunc, name)
-				} else {
-					v()
-				}
-			}
-		}()
-	}
-	lockFunc[name] <- f
+	lock := Lock(name)
+	defer lock.Unlock()
+	f()
 }

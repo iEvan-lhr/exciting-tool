@@ -1,6 +1,6 @@
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// license that can be found in the LICENSE-GO file.
 
 package tools
 
@@ -231,23 +231,26 @@ func (s *String) Atoi() (int, error) {
 	if intSize == 32 && (0 < sLen && sLen < 10) ||
 		intSize == 64 && (0 < sLen && sLen < 19) {
 		// Fast path for small integers that fit int type.
-		s0 := s
-		if s.buf[0] == '-' || s.buf[0] == '+' {
-			s.buf = s.buf[1:]
-			if s.Len() < 1 {
-				return 0, &NumError{Strings(fnAtoi), s0, ErrSyntax}
+		original := BytesString(s.buf)
+		buf := s.buf
+		neg := false
+		if buf[0] == '-' || buf[0] == '+' {
+			neg = buf[0] == '-'
+			buf = buf[1:]
+			if len(buf) < 1 {
+				return 0, &NumError{Strings(fnAtoi), original, ErrSyntax}
 			}
 		}
 
 		n := 0
-		for _, ch := range s.buf {
+		for _, ch := range buf {
 			ch -= '0'
 			if ch > 9 {
-				return 0, &NumError{Strings(fnAtoi), s0, ErrSyntax}
+				return 0, &NumError{Strings(fnAtoi), original, ErrSyntax}
 			}
 			n = n*10 + int(ch)
 		}
-		if s0.buf[0] == '-' {
+		if neg {
 			n = -n
 		}
 		return n, nil

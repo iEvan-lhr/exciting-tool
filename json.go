@@ -3,107 +3,88 @@ package tools
 import (
 	"bytes"
 	"encoding/json"
-	"reflect"
+	"fmt"
 )
 
-// TransHtmlJson 公共方法 处理Go原生json不会替换html字符的问题
-func transHtmlJson(data []byte) []byte {
-	data = bytes.Replace(data, []byte("\\u0026"), []byte("&"), -1)
-	data = bytes.Replace(data, []byte("\\u003c"), []byte("<"), -1)
-	data = bytes.Replace(data, []byte("\\u003e"), []byte(">"), -1)
-	return data
-}
-
-// Unmarshal 公共方法 解析数据至空模板
-func Unmarshal(v interface{}, str interface{}) {
-	var s []byte
-	switch v.(type) {
+func jsonInput(v any) ([]byte, error) {
+	switch value := v.(type) {
 	case string:
-		s = transHtmlJson([]byte(v.(string)))
+		return []byte(value), nil
 	case []byte:
-		s = transHtmlJson(v.([]byte))
+		return value, nil
 	default:
-		s = transHtmlJson(ReturnValueByTwo(json.Marshal(v)).([]byte))
-	}
-	switch str.(type) {
-	case string:
-		reflect.ValueOf(str).Elem().Set(reflect.ValueOf(string(s)))
-	case reflect.Value:
-
-	default:
-		ExecError(json.Unmarshal(s, &str))
+		return json.Marshal(value)
 	}
 }
 
-func UnmarshalByOriginal(v interface{}, str interface{}) {
-	switch v.(type) {
-	case string:
-		ExecError(json.Unmarshal([]byte(v.(string)), &str))
-	case []byte:
-		ExecError(json.Unmarshal(v.([]byte), &str))
-	default:
-		ExecError(json.Unmarshal(ReturnValueByTwo(json.Marshal(v)).([]byte), &str))
-	}
-}
-
-func UMarshal(v, str interface{}) {
-	var marshal []byte
-	var m map[string]any
-	switch v.(type) {
-	case []byte:
-		marshal = v.([]byte)
-		eatError(json.Unmarshal(marshal, &m))
-	case string:
-		marshal = []byte(v.(string))
-		eatError(json.Unmarshal(marshal, &m))
-	default:
-		marshal, m = marshalMap(v)
-		eatError(json.Unmarshal(marshal, &m))
-	}
-	eatError(json.Unmarshal(marshal, str))
-	values, typ := returnValAndTyp(str)
-	if typ.Kind() == reflect.Map {
-		values.Set(reflect.ValueOf(m))
+// Unmarshal parses JSON from a string, byte slice, or marshalable Go value.
+// Deprecated: Use encoding/json.Unmarshal to receive an error.
+func Unmarshal(v interface{}, target interface{}) {
+	data, err := jsonInput(v)
+	ExecError(err)
+	if target == nil {
 		return
 	}
-	for j := 0; j < typ.NumField(); j++ {
-		switch values.Field(j).Interface().(type) {
-		case *String:
-			flo := m[typ.Field(j).Tag.Get("json")].(float64)
-			if float64(int(flo)) == flo {
-				values.Field(j).Set(reflect.ValueOf(Make(int(flo))))
-			} else {
-				values.Field(j).Set(reflect.ValueOf(Make(flo)))
-			}
-		}
-	}
-	return
+	ExecError(json.Unmarshal(data, target))
 }
 
+// UnmarshalByOriginal is retained for compatibility and uses encoding/json
+// without post-processing the source.
+// Deprecated: Use encoding/json.Unmarshal.
+func UnmarshalByOriginal(v interface{}, target interface{}) {
+	Unmarshal(v, target)
+}
+
+// UMarshal is retained for compatibility with the original API.
+// Deprecated: Use encoding/json.Unmarshal.
+func UMarshal(v, target interface{}) {
+	Unmarshal(v, target)
+}
+
+// Marshal serializes a value while leaving HTML characters unescaped.
+// Deprecated: Use json.Encoder with SetEscapeHTML(false) to receive an error.
 func Marshal(v interface{}) []byte {
-	values, typ := returnValAndTyp(v)
-	m := make(map[string]string)
-	for j := 0; j < typ.NumField(); j++ {
-		if !values.Field(j).IsZero() {
-			m[typ.Field(j).Tag.Get("json")] = Make(values.Field(j).Interface()).string()
-		}
-	}
-	return ReturnValue(json.Marshal(m)).([]byte)
+	var buffer bytes.Buffer
+	encoder := json.NewEncoder(&buffer)
+	encoder.SetEscapeHTML(false)
+	ExecError(encoder.Encode(v))
+	return bytes.TrimSuffix(buffer.Bytes(), []byte{'\n'})
 }
 
-func marshalMap(v interface{}) ([]byte, map[string]any) {
-	values, typ := returnValAndTyp(v)
-	m := make(map[string]any)
-	for j := 0; j < typ.NumField(); j++ {
-		if values.Field(j).Kind() != reflect.Slice && values.Field(j).Kind() != reflect.Map && !values.Field(j).IsZero() {
-			switch values.Field(j).Interface().(type) {
-			case *String:
-				m[typ.Field(j).Tag.Get("json")] = Make(values.Field(j).Interface())
-			default:
-				m[typ.Field(j).Tag.Get("json")] = values.Field(j).Interface()
-			}
+// MarshalJSON makes String interoperate with encoding/json as a JSON string.
+func (s *String) MarshalJSON() ([]byte, error) {
+	if s == nil {
+		return []byte("null"), nil
+	}
+	return json.Marshal(s.String())
+}
 
+// UnmarshalJSON accepts JSON strings as well as scalar numbers and booleans.
+func (s *String) UnmarshalJSON(data []byte) error {
+	if bytes.Equal(data, []byte("null")) {
+		s.reset()
+		return nil
+	}
+
+	var value string
+	if len(data) > 0 && data[0] == '"' {
+		if err := json.Unmarshal(data, &value); err != nil {
+			return err
+		}
+	} else {
+		var scalar any
+		if err := json.Unmarshal(data, &scalar); err != nil {
+			return err
+		}
+		switch scalar.(type) {
+		case float64, bool:
+			value = string(data)
+		default:
+			return fmt.Errorf("tools.String cannot decode JSON value %s", data)
 		}
 	}
-	return ReturnValue(json.Marshal(m)).([]byte), m
+
+	s.reset()
+	s.Append(value)
+	return nil
 }

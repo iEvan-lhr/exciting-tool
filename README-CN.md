@@ -1,91 +1,96 @@
 # exciting-tool
 
-[![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](https://opensource.org/licenses/Apache-2.0)
+[English](./README.md) | 简体中文
 
-[English](./README.md) | [简体中文](./README-CN.md)
+exciting-tool 是一个面向 Go 1.26+ 的轻量工具集合。v0.2 将新 API 拆分为聚焦、类型安全的子包，同时保留根包兼容层，方便现有项目逐步迁移。
 
-exciting-tool 是一个理想化的全能的 Go 的工具包，涉及的内容包括:字符串的处理（拼接、转换等等）、结构体的日志遍历（示例）、原生sql的自动拼接与处理、更方便的map（开发中）、json解析、http请求发送等等。
-
-
-## 备注信息
-
-这是一个完全开源的项目。
-
-作者并不能保证能及时更新内容，但会尽力去完善文档来帮助使用者来使用。
-
-也欢迎大家帮助我 :heart::heart::heart:
-
-## 重要提示  ⚠⚠⚠⚠⚠
-
-
-☠ 需要GO版本1.18或更多 ☠
-
-☀ 您可以在低版本中使用Lowversion分支的代码 ☀
-
-某些功能可能不安全，并且某些功能仅在GO原生代码中修改。因此，请注意实际使用中某些功能的使用。在可能的问题上，我会尽可能地标记。
-
-## 如何使用
+## 安装
 
 ```bash
-   go get github.com/iEvan-lhr/exciting-tool
-```    
-## 全功能 String  
+go get github.com/iEvan-lhr/exciting-tool
+```
 
-使用这段代码来构造全功能String
+要求 Go 1.26 或更高版本。
+
+## 子包
+
+### textutil
+
+安全提取文本，不使用无边界下标：
+
+```go
+value, ok := textutil.Between("before<a>内容</a>after", "<a>", "</a>")
+items := textutil.AllBetween("<b>one</b><b>two</b>", "<b>", "</b>")
+part, err := textutil.SliceRunes("A中文B", 1, 3)
+```
+
+### httpx
+
+支持 context、超时、响应大小限制、状态码和 JSON：
+
+```go
+client := httpx.New(
+    httpx.WithTimeout(10*time.Second),
+    httpx.WithMaxBodyBytes(2<<20),
+)
+
+var result User
+response, err := client.GetJSON(ctx, endpoint, &result)
+```
+
+非 2xx JSON 请求会返回 `*httpx.StatusError`。普通 `Do` 始终返回状态码和 Header，由调用者决定如何处理。
+
+### sqlbuilder
+
+生成参数化 SQL，不把值拼入语句：
+
+```go
+type User struct {
+    ID   int    `db:"id,where"`
+    Name string `db:"name"`
+}
+
+query, args, err := sqlbuilder.New(sqlbuilder.PostgreSQL).
+    UpdateStruct(User{ID: 7, Name: "Ada"})
+// UPDATE "user" SET "name" = $1 WHERE "id" = $2
+// args: []any{"Ada", 7}
+```
+
+`Update` 和 `Delete` 在没有过滤条件时返回 `ErrUnsafeMutation`。
+
+### orderedmap
+
+泛型、并发安全并保留插入顺序：
+
+```go
+values := orderedmap.New[string, int]()
+values.Set("first", 1)
+values.Set("second", 2)
+keys := values.Keys()
+```
+
+## 兼容层
+
+原有 `tools.String`、`Do`、`Query` 等 API 仍保留。新代码建议使用：
+
+- `NewHTTPClient` 或 `httpx.New`
+- `InsertArgs`、`QueryArgs`、`UpdateArgs`
+- `String.ByteAt`、`String.Slice`、`String.RuneAt`、`String.SliceRunes`
+
+旧的 HTTP 快捷函数依赖 panic 传递错误，已标记为 Deprecated。
+
+## 开发
 
 ```bash
-    tools.Make(str)
-```  
-
-### 相同的入参支持
-
-✔以下方法支持使用String，全功能String，[]byte 作为入参，部分支持rune作为入参
-
-```plain
-
-Function:
-  Index(str any)           The next bid search, while supporting the Rune type retrieval
-  Append(join any)         Add content to the string to support adding 
-                           all basic types and extension basic types 
-                           (including int, float, BOOL, int32, int16, string, str, byte, [] byte ...). 
-                           Can be added (PS: pointer is passed in)
-  Make(obj any)            If the structure is used to construct and the structure 
-                           does not implement the String () method,
-                           the full attribute printing will be performed. 
-                           The example is as follows:
-                           ----------User----------
-                           Id:23132
-                           Username:foo
-                           Password:bar
-                           Identity:324213
-                           QrCode:982j32
-                           DenKey:ansssss
-                           TalkingKey:qwesad
-                           ----------END----------
-  FirstUpper()
-  FirstLower()
-  Check(str any)
-  RemoveLastStr(lens)
-  RemoveIndexStr(lens)
-  Spilt(str any)
-  CheckIsNull()
-
+go test ./...
+go vet ./...
+go test -race ./...
 ```
 
-## Error treatment
+升级现有项目请阅读 [MIGRATION.md](./MIGRATION.md)，版本变化见 [CHANGELOG.md](./CHANGELOG.md)。
 
-```plain
+## License
 
-Function:
-  ReturnValueByTwo()       The return value after the automatic processing, 
-                           if the error is not empty, will panic(err)
-  ReturnValue()            The return value after the automatic processing, 
-                           if the error is not empty, will log(err)
-  ExecGoFunc()             The error task that can be automatically defined in the asynchronous 
-                           execution method internally is the asynchronous
-                           execution of the error task that may occur
-  ExecError()
-  PanicError()
-  logError()
-
-```
+项目代码使用 Apache-2.0。部分源文件改编自 Go 标准库，并按照
+[LICENSE-GO](./LICENSE-GO) 和 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)
+保留其原始版权与许可证说明。

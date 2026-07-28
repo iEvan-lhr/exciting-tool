@@ -2,9 +2,7 @@ package tools
 
 import (
 	"log"
-	"reflect"
 	"testing"
-	"unsafe"
 )
 
 func TestName(t *testing.T) {
@@ -53,18 +51,6 @@ type User struct {
 //	return u.Username + ":" + u.Password
 //}
 
-func StructToBytes(model *User) []byte {
-	var x reflect.SliceHeader
-	x.Len = int(unsafe.Sizeof(model))
-	x.Cap = x.Len
-	x.Data = uintptr(unsafe.Pointer(model))
-	return *(*[]byte)(unsafe.Pointer(&x))
-}
-
-func BytesToStruct(data []byte) *User {
-	return (*User)(unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(&data)).Data))
-}
-
 func TestStr(t *testing.T) {
 	//s := Make("（林婕琼）")
 	//log.Println(Make("12345").FormatterNum())
@@ -74,11 +60,11 @@ func TestStr(t *testing.T) {
 	content[0] = "(+++"
 	ans := Make()
 	for i := 0; i < len(ste); i++ {
-		switch ste[i].model {
+		switch ste[i].Model {
 		case 0:
-			ans.Append(content[ste[i].index])
+			ans.Append(content[ste[i].Index])
 		case 1:
-			ans.Append(other[ste[i].index])
+			ans.Append(other[ste[i].Index])
 		}
 	}
 	str := ans.string()

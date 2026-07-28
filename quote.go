@@ -1,6 +1,6 @@
 // Copyright 2009 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// license that can be found in the LICENSE-GO file.
 
 //go:generate go run makeisprint.go -output isprint.go
 
@@ -36,19 +36,18 @@ func appendQuotedWith(buf []byte, s *String, quote byte, ASCIIonly, graphicOnly 
 		buf = nBuf
 	}
 	buf = append(buf, quote)
-	for width := 0; s.Len() > 0; s.RemoveIndexStr(width) {
-		r := s.runes[0]
-		width = 1
-		if r >= utf8.RuneSelf {
-			r, width = utf8.DecodeRune(s.buf)
-		}
+	input := s.buf
+	for len(input) > 0 {
+		r, width := utf8.DecodeRune(input)
 		if width == 1 && r == utf8.RuneError {
 			buf = append(buf, `\x`...)
-			buf = append(buf, lowerhex[s.buf[0]>>4])
-			buf = append(buf, lowerhex[s.buf[0]&0xF])
+			buf = append(buf, lowerhex[input[0]>>4])
+			buf = append(buf, lowerhex[input[0]&0xF])
+			input = input[width:]
 			continue
 		}
 		buf = appendEscapedRune(buf, r, quote, ASCIIonly, graphicOnly)
+		input = input[width:]
 	}
 	buf = append(buf, quote)
 	return buf
@@ -121,7 +120,11 @@ func appendEscapedRune(buf []byte, r rune, quote byte, ASCIIonly, graphicOnly bo
 }
 
 func Quote(s *String) {
-	quoteWith(s, '"', false, false)
+	if s == nil {
+		return
+	}
+	s.buf = quoteWith(s, '"', false, false)
+	s.runes = nil
 }
 
 //// AppendQuote appends a double-quoted Go string literal representing s,

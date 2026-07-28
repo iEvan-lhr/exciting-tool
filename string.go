@@ -5,8 +5,8 @@ import (
 	"errors"
 	"reflect"
 	"time"
+	"unicode"
 	"unicode/utf8"
-	"unsafe"
 )
 
 const (
@@ -15,7 +15,6 @@ const (
 )
 
 type String struct {
-	addr  *String
 	runes []rune
 	buf   []byte
 }
@@ -49,12 +48,12 @@ func (s *String) String() string {
 
 // Runes 返回中文支持的字符
 func (s *String) Runes() []rune {
-	return s.runes
+	return bytes.Runes(s.buf)
 }
 
 // Bytes 返回中文支持的字符
 func (s *String) Bytes() []byte {
-	return s.buf
+	return bytes.Clone(s.buf)
 }
 
 // Check 检查是否相等
@@ -88,9 +87,10 @@ func (s *String) Check(str any) bool {
 			return true
 		}
 	case []rune:
-		if inTF(len(s.runes), len(str.([]rune))) {
+		runes := bytes.Runes(s.buf)
+		if inTF(len(runes), len(str.([]rune))) {
 			for i, v := range str.([]rune) {
-				if s.runes[i] != v {
+				if runes[i] != v {
 					return false
 				}
 			}
@@ -103,6 +103,10 @@ func (s *String) Check(str any) bool {
 
 // appendAny  拼接字符串
 func (s *String) appendAny(join any) int {
+	s.runes = nil
+	if join == nil {
+		return ReturnValue(s.writeString("<nil>")).(int)
+	}
 	switch join.(type) {
 	case *String:
 		return ReturnValue(s.Write(join.(*String).buf)).(int)
@@ -122,7 +126,7 @@ func (s *String) appendAny(join any) int {
 	case int32:
 		return appendInt(int(join.(int32)), &s.buf)
 	case int64:
-		return appendInt(int(join.(int64)), &s.buf)
+		return formatInt(join.(int64), 10, &s.buf)
 	case uint:
 		return appendUint64(uint64(join.(uint)), &s.buf)
 	case uint16:
@@ -137,7 +141,7 @@ func (s *String) appendAny(join any) int {
 		return s.Len() - l1
 	case float64:
 		l1 := s.Len()
-		genericFtoa(&s.buf, join.(float64), 'f', 2, 32)
+		genericFtoa(&s.buf, join.(float64), 'f', 2, 64)
 		return s.Len() - l1
 	case bool:
 		if join.(bool) {
@@ -219,25 +223,31 @@ func (s *String) SplitString(str String) []*String {
 	byt := bytes.Split(s.buf, str.buf)
 	var order []*String
 	for i := range byt {
-		order = append(order, &String{buf: byt[i]})
+		order = append(order, BytesString(byt[i]))
 	}
 	return order
 }
 
 // FirstUpper 首字母大写
 func (s *String) FirstUpper() {
-	if s.buf[0] > 90 {
-		s.buf[0] = s.buf[0] - 32
+	runes := bytes.Runes(s.buf)
+	if len(runes) == 0 {
+		return
 	}
-	s.runes = bytes.Runes(s.buf)
+	runes[0] = unicode.ToUpper(runes[0])
+	s.buf = runesToBytes(runes)
+	s.runes = nil
 }
 
 // FirstLower 首字母小写
 func (s *String) FirstLower() {
-	if s.buf[0] < 97 {
-		s.buf[0] = s.buf[0] + 32
+	runes := bytes.Runes(s.buf)
+	if len(runes) == 0 {
+		return
 	}
-	s.runes = bytes.Runes(s.buf)
+	runes[0] = unicode.ToLower(runes[0])
+	s.buf = runesToBytes(runes)
+	s.runes = nil
 }
 
 // FirstUpperBackString 首字母大写后返回string
@@ -252,21 +262,8 @@ func (s *String) FirstLowerBackString() string {
 	return s.string()
 }
 
-func noescape(p unsafe.Pointer) unsafe.Pointer {
-	x := uintptr(p)
-	return unsafe.Pointer(x ^ 0)
-}
-
-func (s *String) copyCheck() {
-	if s.addr == nil {
-		s.addr = (*String)(noescape(unsafe.Pointer(s)))
-	} else if s.addr != s {
-		panic("strings: illegal use of non-zero String copied by value")
-	}
-}
-
 func (s *String) string() string {
-	return *(*string)(unsafe.Pointer(&s.buf))
+	return string(s.buf)
 }
 
 // Len 返回字符串长度
@@ -278,8 +275,8 @@ func (s *String) LenByRune() int { return len(bytes.Runes(s.buf)) }
 func (s *String) cap() int { return cap(s.buf) }
 
 func (s *String) reset() {
-	s.addr = nil
 	s.buf = nil
+	s.runes = nil
 }
 
 func (s *String) grow(n int) {
@@ -290,7 +287,6 @@ func (s *String) grow(n int) {
 
 // Grow  扩充大小
 func (s *String) Grow(n int) {
-	s.copyCheck()
 	if n < 0 {
 		panic("strings.String.Grow: negative count")
 	}
@@ -301,21 +297,21 @@ func (s *String) Grow(n int) {
 
 // WriteByte 写入[]Byte的数据
 func (s *String) Write(p []byte) (int, error) {
-	s.copyCheck()
 	s.buf = append(s.buf, p...)
+	s.runes = nil
 	return len(p), nil
 }
 
 // WriteByte 写入Byte字符格式的数据
 func (s *String) WriteByte(c byte) error {
-	s.copyCheck()
 	s.buf = append(s.buf, c)
+	s.runes = nil
 	return nil
 }
 
 // WriteRune 写入Rune字符格式的数据
 func (s *String) WriteRune(r rune) (int, error) {
-	s.copyCheck()
+	s.runes = nil
 	if r < utf8.RuneSelf {
 		s.buf = append(s.buf, byte(r))
 		return 1, nil
@@ -330,56 +326,62 @@ func (s *String) WriteRune(r rune) (int, error) {
 }
 
 func (s *String) writeString(str string) (int, error) {
-	s.copyCheck()
 	s.buf = append(s.buf, str...)
+	s.runes = nil
 	return len(str), nil
 }
 
 // RemoveLastStr 从尾部移除固定长度的字符
 func (s *String) RemoveLastStr(lens int) {
-	if lens > s.Len() {
+	if lens < 0 || lens > s.Len() {
 		LogError(errors.New("RemoveLens>stringLens Please Check"))
 		return
 	}
 	s.buf = s.buf[:s.Len()-lens]
-	s.runes = bytes.Runes(s.buf)
+	s.runes = nil
 }
 
 // ReplaceLastStr 从尾部移除固定长度的字符
 func (s *String) ReplaceLastStr(lens int, str any) {
+	if lens < 0 || lens > s.Len() {
+		LogError(errors.New("ReplaceLens>stringLens Please Check"))
+		return
+	}
 	s.buf = s.buf[:s.Len()-lens]
 	s.appendAny(str)
-	s.runes = bytes.Runes(s.buf)
+	s.runes = nil
 }
 
 // RemoveLastStrByRune 从尾部移除固定长度的字符 并且支持中文字符的移除
 func (s *String) RemoveLastStrByRune(lens int) {
 	runes := bytes.Runes(s.buf)
-	if lens > len(runes) {
+	if lens < 0 || lens > len(runes) {
 		LogError(errors.New("RemoveLens>stringLens Please Check"))
 		return
 	}
 	s.buf = runesToBytes(runes[:len(runes)-lens])
+	s.runes = nil
 }
 
 // RemoveIndexStr 移除头部固定长度的字符
 func (s *String) RemoveIndexStr(lens int) {
-	if lens > s.Len() {
+	if lens < 0 || lens > s.Len() {
 		LogError(errors.New("RemoveLens>stringLens Please Check"))
 		return
 	}
 	s.buf = s.buf[lens:]
-	s.runes = bytes.Runes(s.buf)
+	s.runes = nil
 }
 
 // RemoveIndexRune 移除头部固定长度的字符（中文支持）
 func (s *String) RemoveIndexRune(lens int) {
-	if lens > len(s.runes) {
+	runes := bytes.Runes(s.buf)
+	if lens < 0 || lens > len(runes) {
 		LogError(errors.New("RemoveLens>stringLens Please Check"))
 		return
 	}
-	s.runes = s.runes[lens:]
-	s.buf = runesToBytes(s.runes)
+	s.buf = runesToBytes(runes[lens:])
+	s.runes = nil
 }
 
 // CheckIsNull 检查字符串是否为空 只包含' '与'\t'与'\n'都会被视为不合法的值
@@ -393,11 +395,9 @@ func (s *String) CheckIsNull() bool {
 }
 
 func (s *String) indexByRune(r rune) int {
-	if s.runes == nil || len(s.runes) == 0 {
-		s.runes = bytes.Runes(s.buf)
-	}
-	for i := range s.runes {
-		if s.runes[i] == r {
+	runes := bytes.Runes(s.buf)
+	for i := range runes {
+		if runes[i] == r {
 			return i
 		}
 	}
