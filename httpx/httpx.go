@@ -1,5 +1,4 @@
-// Package httpx provides a small, context-aware HTTP client with bounded
-// response reads and JSON helpers.
+// Package httpx provides context-aware buffered and streaming HTTP helpers.
 package httpx
 
 import (
@@ -20,9 +19,11 @@ var ErrBodyTooLarge = errors.New("http response body exceeds configured limit")
 type Option func(*Client)
 
 type Client struct {
-	httpClient   *http.Client
-	headers      http.Header
-	maxBodyBytes int64
+	httpClient        *http.Client
+	headers           http.Header
+	maxBodyBytes      int64
+	retryPolicy       RetryPolicy
+	requestValidators []RequestValidator
 }
 
 type Response struct {
@@ -33,7 +34,9 @@ type Response struct {
 
 type StatusError struct {
 	StatusCode int
+	Header     http.Header
 	Body       []byte
+	Truncated  bool
 }
 
 func (e *StatusError) Error() string {
@@ -46,6 +49,7 @@ func New(options ...Option) *Client {
 		httpClient:   &http.Client{Timeout: 30 * time.Second},
 		headers:      make(http.Header),
 		maxBodyBytes: defaultMaxBodyBytes,
+		retryPolicy:  RetryPolicy{MaxAttempts: 1},
 	}
 	for _, option := range options {
 		if option != nil {
@@ -85,6 +89,25 @@ func WithHeader(key, value string) Option {
 	}
 }
 
+// WithRetry enables retry behavior for requests allowed by policy.
+// MaxAttempts includes the initial request. A value smaller than two disables
+// retries.
+func WithRetry(policy RetryPolicy) Option {
+	return func(client *Client) {
+		client.retryPolicy = policy.clone()
+	}
+}
+
+// WithRequestValidator adds a validator that runs before every request
+// attempt. It can enforce policies such as allowed URL schemes or hosts.
+func WithRequestValidator(validator RequestValidator) Option {
+	return func(client *Client) {
+		if validator != nil {
+			client.requestValidators = append(client.requestValidators, validator)
+		}
+	}
+}
+
 func (r *Response) OK() bool {
 	return r != nil && r.StatusCode >= http.StatusOK && r.StatusCode < http.StatusMultipleChoices
 }
@@ -106,42 +129,17 @@ func (c *Client) Do(
 	body io.Reader,
 	headers http.Header,
 ) (*Response, error) {
-	if c == nil {
-		c = New()
-	}
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	httpClient := c.httpClient
-	if httpClient == nil {
-		httpClient = &http.Client{Timeout: 30 * time.Second}
-	}
-	limit := c.maxBodyBytes
-	if limit <= 0 {
-		limit = defaultMaxBodyBytes
-	}
-	request, err := http.NewRequestWithContext(ctx, method, url, body)
+	stream, err := c.DoStream(ctx, method, url, body, headers)
 	if err != nil {
 		return nil, err
 	}
-	request.Header = c.headers.Clone()
-	for key, values := range headers {
-		request.Header.Del(key)
-		for _, value := range values {
-			request.Header.Add(key, value)
-		}
-	}
+	defer stream.Body.Close()
 
-	response, err := httpClient.Do(request)
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-
-	data, err := io.ReadAll(io.LimitReader(response.Body, limit+1))
+	limit := c.bodyLimit()
+	data, err := io.ReadAll(io.LimitReader(stream.Body, limit+1))
 	result := &Response{
-		StatusCode: response.StatusCode,
-		Header:     response.Header.Clone(),
+		StatusCode: stream.StatusCode,
+		Header:     stream.Header.Clone(),
 		Body:       data,
 	}
 	if err != nil {
@@ -186,6 +184,7 @@ func (c *Client) DoJSON(
 	if !response.OK() {
 		return response, &StatusError{
 			StatusCode: response.StatusCode,
+			Header:     response.Header.Clone(),
 			Body:       append([]byte(nil), response.Body...),
 		}
 	}
@@ -203,4 +202,11 @@ func (c *Client) GetJSON(ctx context.Context, url string, target any) (*Response
 
 func (c *Client) PostJSON(ctx context.Context, url string, payload, target any) (*Response, error) {
 	return c.DoJSON(ctx, http.MethodPost, url, payload, target, nil)
+}
+
+func (c *Client) bodyLimit() int64 {
+	if c == nil || c.maxBodyBytes <= 0 {
+		return defaultMaxBodyBytes
+	}
+	return c.maxBodyBytes
 }

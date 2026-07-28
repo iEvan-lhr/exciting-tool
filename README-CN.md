@@ -2,7 +2,8 @@
 
 [English](./README.md) | 简体中文
 
-exciting-tool 是一个面向 Go 1.26+ 的轻量工具集合。v0.2 将新 API 拆分为聚焦、类型安全的子包，同时保留根包兼容层，方便现有项目逐步迁移。
+exciting-tool 是一个面向 Go 1.26+ 的轻量工具集合。v0.3 增加了流式 HTTP
+和结构化模型文本处理，同时保留根包兼容层，方便现有项目逐步迁移。
 
 ## 安装
 
@@ -26,7 +27,7 @@ part, err := textutil.SliceRunes("A中文B", 1, 3)
 
 ### httpx
 
-支持 context、超时、响应大小限制、状态码和 JSON：
+支持 context、超时、响应大小限制、状态码、JSON、重试和流式传输：
 
 ```go
 client := httpx.New(
@@ -39,6 +40,54 @@ response, err := client.GetJSON(ctx, endpoint, &result)
 ```
 
 非 2xx JSON 请求会返回 `*httpx.StatusError`。普通 `Do` 始终返回状态码和 Header，由调用者决定如何处理。
+
+大文件上传和下载不需要完整缓存在内存中：
+
+```go
+form := httpx.NewMultipart()
+_ = form.AddField("format", "pdf")
+_ = form.AddFile("files", pptxPath)
+
+response, err := client.PostMultipartStream(ctx, endpoint, form, nil)
+if err != nil {
+    return err
+}
+defer response.Close()
+if err := response.CheckStatus(64 << 10); err != nil {
+    return err
+}
+if err := response.RequireContentType("application/pdf"); err != nil {
+    return err
+}
+response.LimitBody(100 << 20)
+_, err = io.Copy(output, response.Body)
+```
+
+重试默认关闭。默认重试方法均为幂等方法；只有服务端允许重复处理时，才应显式加入 `POST`：
+
+```go
+client := httpx.New(httpx.WithRetry(httpx.RetryPolicy{
+    MaxAttempts:          3,
+    BaseDelay:            200 * time.Millisecond,
+    MaxDelay:             2 * time.Second,
+    RetryTransportErrors: true,
+    RespectRetryAfter:    true,
+}))
+```
+
+### structuredtext
+
+从模型输出中提取 JSON，或处理跨流式 chunk 的标记：
+
+```go
+jsonText, ok := structuredtext.ExtractJSON(llmResponse)
+
+tokenizer, _ := structuredtext.NewMarkerTokenizer("(img:", ")")
+tokens, err := tokenizer.Push(streamChunk)
+```
+
+`ExtractJSONWithRepair` 接受修复回调，因此业务项目可以继续使用已有的
+JSON 修复库，`exciting-tool` 不会额外绑定一套实现。
 
 ### sqlbuilder
 

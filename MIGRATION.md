@@ -1,8 +1,8 @@
-# Migrating to v0.2
+# Migrating to v0.3
 
 ## Requirements
 
-v0.2 requires Go 1.26 or newer.
+v0.3 requires Go 1.26 or newer.
 
 ## HTTP
 
@@ -20,6 +20,51 @@ response, err := client.Do(ctx, http.MethodGet, url, nil, nil)
 ```
 
 Use `GetJSON`, `PostJSON`, or `DoJSON` when decoding JSON.
+
+`Do` remains buffered and bounded. Use `DoStream` when the response should be
+copied directly to a file or another writer:
+
+```go
+response, err := client.DoStream(ctx, http.MethodGet, url, nil, nil)
+if err != nil {
+    return err
+}
+defer response.Close()
+response.LimitBody(100 << 20)
+_, err = io.Copy(destination, response.Body)
+```
+
+The caller must close every successful streaming response. `CheckStatus`
+consumes and closes only non-2xx bodies.
+
+## Multipart requests
+
+Replace manually buffered `multipart.Writer` code with `httpx.Multipart`:
+
+```go
+form := httpx.NewMultipart()
+_ = form.AddFile("files", path)
+response, err := client.PostMultipartStream(ctx, endpoint, form, nil)
+```
+
+`AddBytes`, `AddFile`, and `AddReaderFunc` can recreate their bodies for a
+retry. `AddReader` is intentionally one-shot and is rejected when POST retries
+are enabled.
+
+## Retries
+
+Retries are disabled unless `WithRetry` is used. `MaxAttempts` includes the
+initial request. A custom `Request.Body` must return a fresh body every time.
+`DoStream` accepts the replayable reader types recognized by `net/http`; it
+returns `ErrBodyNotReplayable` before sending when the configured method may
+retry but the supplied body cannot be replayed.
+
+## Structured model output
+
+Use `structuredtext.ExtractJSON` instead of trimming Markdown fences and JSON
+substrings independently in each service. Use `ExtractJSONWithRepair` to
+connect an existing repair dependency. `MarkerTokenizer` preserves delimiters
+split across streaming chunks.
 
 ## SQL
 

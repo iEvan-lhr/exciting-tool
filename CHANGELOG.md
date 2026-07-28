@@ -1,12 +1,20 @@
 # Changelog
 
-## Unreleased (v0.2.0)
+## Unreleased (v0.3.0)
 
 ### Added
 
 - Go 1.26 module and CI baseline.
 - `textutil` bounds-safe text helpers.
 - `httpx` context-aware client, JSON helpers, status errors, and response limits.
+- Streaming HTTP responses with bounded status errors, content-type checks,
+  body limits, and request validation hooks.
+- Opt-in context-aware retries with replayable request bodies, exponential
+  backoff, `Retry-After`, and retry hooks.
+- Streaming multipart forms for byte slices, files, readers, and reopenable
+  reader factories.
+- `structuredtext` JSON extraction, injected repair support, and streaming
+  marker tokenization.
 - `sqlbuilder` parameterized MySQL, PostgreSQL, and SQLite statements.
 - Generic concurrency-safe `orderedmap`.
 - Root migration APIs: `NewHTTPClient`, `InsertArgs`, `QueryArgs`, and `UpdateArgs`.
